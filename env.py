@@ -1,9 +1,61 @@
 import sys
 
+import math
+
+import numpy as np
 import pygame
 
 from constants import *
 from tools import *
+
+class ColorChanger:
+    def __init__(self, x, y, r , color):
+        self.x = x
+        self.y = y
+        self.r = r
+        self.color = color
+
+    def drawCircle(self,screen,color):
+        pygame.draw.circle(screen, BLACK, (self.x, self.y), self.r)
+        pygame.draw.circle(screen, color, (self.x,self.y),self.r-2)
+
+    def changeColor(self, pos):
+        if math.sqrt(math.pow((self.x - pos[0]),2)+math.pow((self.y-pos[1]),2)) <= self.r:
+            return True
+        return False
+
+
+class Button:
+    def __init__(self, x, y, w, h, text, color):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.color = color
+        self.text = text
+        self.rect = pygame.Rect(x,y,w,h)
+
+    def drawRect(self, screen):
+        pygame.draw.rect(screen,BLACK,(self.x-2,self.y-2,self.w+4,self.h+4),0)
+        pygame.draw.rect(screen, self.color, self.rect, 0)
+        font = pygame.font.Font('Amatic-Bold.ttf',35)
+        text = font.render(self.text, 1, BLACK)
+        screen.blit(text, (self.x + (self.w/2 - text.get_width()/2), self.y + (self.h/2 - text.get_height()/2)))
+
+    def on_button(self, pos):
+        if pos[0] > self.x and pos[0] < self.x + self.w:
+            if pos[1] > self.y and pos[1] < self.y + self.h:
+                return True
+        return False
+
+    def get_rect(self):
+        return self.rect
+
+    def hover(self,screen):
+        pygame.draw.rect(screen, BLACK, self.rect, 0)
+        font = pygame.font.Font('Amatic-Bold.ttf', 35)
+        text = font.render(self.text, 1, WHITE)
+        screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
 
 
 class Token:
