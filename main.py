@@ -21,6 +21,7 @@ def main():
                 pygame.quit()
                 quit()
 
+        game.update()
         game.render(teeko_surf)
 
         display.blit(teeko_surf, (0, 0))
