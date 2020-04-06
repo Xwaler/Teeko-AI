@@ -108,8 +108,45 @@ def getAllMoves(player, gameGrid):
     return moves
 
 
-def evaluateMove(move, gameGrid):
-    i = 1
+def getScore(grid):
+    getAligned(1, grid) - getAligned(2, grid)
+
+
+def evaluateMove(currentState, depth, currentChain):
+
+    if depth < 3:
+
+        print("currentState : \n", currentState)
+
+        moves = getAllMoves(1, currentState)
+
+        print("moves : ", moves)
+
+        bestchain = currentChain[:]
+        bestScore = -5
+
+        for point in moves:
+
+            for move in point:
+                print("depth : ", depth)
+                print("move : ", move)
+
+                testgrid = currentState[:]
+                testchain = currentChain[:]
+                testchain.append(move)
+                moveToken(move, testgrid)
+
+                movescore = evaluateMove(testgrid, depth + 1, testchain)
+
+                print("score : ", movescore[0])
+
+                if bestScore < movescore[0]:
+                    bestScore = movescore[0]
+                    bestchain = movescore[1]
+
+        return [bestScore, bestchain]
+    else:
+        return [getScore(currentState), currentChain]
 
 
 def moveToken(move, gameGrid):
@@ -119,15 +156,4 @@ def moveToken(move, gameGrid):
 
 randomStart()
 
-print(gameGridO)
-print("Position jetons joueurs :")
-print(playerPos)
-
-print("Nombre jetons alignés joueur 1 :")
-print(getAligned(1, gameGridO))
-print("Nombre jetons alignés joueur 2:")
-print(getAligned(2, gameGridO))
-
-print(getAllMoves(1, gameGridO))
-
-print(getAllMoves(2, gameGridO))
+evaluateMove(gameGridO, 0, [])
