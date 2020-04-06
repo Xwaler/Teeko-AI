@@ -91,8 +91,8 @@ class State:
         return False
 
     def get_score(self, player):
-        # TODO: ALED GUILLAUME
-        return np.random.randint(-3, 3)
+        max_align = np.random.randint(0, 5)
+        return max_align * (-1 if player.idt == 2 else 1)
 
 
 class Teeko:
@@ -147,10 +147,14 @@ class Teeko:
             possible_moves = self.state.getAllMoves(player)
             scores = np.empty(len(possible_moves))
             for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, self.state, 2, -np.inf, np.inf, False, player.idt)
+                scores[i] = self.minMax(move, self.state, 2, -np.inf, np.inf, player.idt == 1, player.idt)
             print(list(zip(possible_moves, scores)))
 
-            move = possible_moves[np.argmax(scores)]
+            if player.idt == 1:
+                move = possible_moves[np.argmax(scores)]
+            else:
+                move = possible_moves[np.argmin(scores)]
+
             if move[0] == 0:
                 self.state.addToken(player, move[1])
             else:
