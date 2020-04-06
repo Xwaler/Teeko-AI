@@ -30,7 +30,7 @@ class State:
 
         self.players = np.empty(2, dtype=Player)
         for i in [1, 2]:
-            self.players[i - 1] = Player(i, AI=i == 2)
+            self.players[i - 1] = Player(i, AI=True)
 
         for player in self.players:
             j = 0
@@ -57,22 +57,23 @@ class State:
         for shift in SURROUNDING:
             if 0 <= token.pos[0] + shift[0] < 5 and 0 <= token.pos[1] + shift[1] < 5 and \
                     self.grid[token.pos[0] + shift[0]][token.pos[1] + shift[1]] is None:
-                token_moves.append(shift)
+                token_moves.append([1, token.pos.tolist(), shift])
 
             if 0 <= token.pos[0] - shift[0] < 5 and 0 <= token.pos[1] - shift[1] < 5 and \
                     self.grid[token.pos[0] - shift[0]][token.pos[1] - shift[1]] is None:
-                token_moves.append([-shift[0], -shift[1]])
+                token_moves.append([1, token.pos.tolist(), [-shift[0], -shift[1]]])
 
         return token_moves
 
     def getAllMoves(self, player):
-        moves = {}
+        moves = []
 
         for token in player.tokens:
-            currentTokenMoves = self.getPossibleMove(token)
+            moves.extend(self.getPossibleMove(token))
 
-            if currentTokenMoves:
-                moves[token] = currentTokenMoves
+        if len(player.tokens) < 4:
+            placement_move = [[0, pos.tolist(), [0, 0]] for pos in self.getAllEmpty()]
+            moves.extend(placement_move)
 
         return moves
 
@@ -84,8 +85,14 @@ class State:
                     positions.append((j, i))
         return positions
 
-    def get_score(self, move):
-        pass
+    def over(self):
+        # TODO: ALED GUILLAUME
+        # return max(self.getAligned(1), self.getAligned(2)) >= 4
+        return False
+
+    def get_score(self, player):
+        # TODO: ALED GUILLAUME
+        return np.random.randint(-3, 3)
 
 
 class Teeko:
@@ -94,41 +101,60 @@ class Teeko:
         self.state = State().__random_start__()
         self.turn_to = randomChoice(self.state.players)
 
-    #  move = (0, idt_player, (pos token à placer), (0, 0)) ou (1, idt_player, (pos token à deplacer), (direction))
-    def minMax(self, move, current_state, depth, alpha, beta, maximizing_player):
-        if depth == 0 or self.over_if(move):
-            return self.get_score(move)
-
+    #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
+    def minMax(self, move, current_state, depth, alpha, beta, maximizing_player, primary_player_idt):
         new_state = deepcopy(current_state)
-        player = new_state.players[move[1]]
+
+        player = new_state.players[primary_player_idt - 1]
+        other_player = new_state.players[abs(primary_player_idt - 2)]
+
         if move[0] == 0:
-            new_state.addToken(player, move[2])
+            new_state.addToken(player, move[1])
         else:
-            new_state.moveToken(new_state.grid[move[2][0]][move[2][1]], move[3])
+            new_state.moveToken(new_state.grid[move[1][0]][move[1][1]], move[2])
+
+        if depth == 0 or new_state.over():
+            return new_state.get_score(player)
 
         if maximizing_player:
             max_score = -np.inf
 
             for child_move in new_state.getAllMoves(player):
-                pass
+                score = self.minMax(child_move, new_state, depth - 1, alpha, beta, False, primary_player_idt)
+                max_score = max(max_score, score)
+
+                alpha = max(alpha, score)
+                if beta <= alpha:
+                    break
+            return max_score
+
+        else:
+            min_score = np.inf
+
+            for child_move in new_state.getAllMoves(other_player):
+                score = self.minMax(child_move, new_state, depth - 1, alpha, beta, True, primary_player_idt)
+                min_score = min(min_score, score)
+
+                alpha = min(alpha, score)
+                if beta <= alpha:
+                    break
+            return min_score
 
     def update(self):
         player = self.turn_to
 
         if player.AI:
-            # TODO: replace random with min/max
+            possible_moves = self.state.getAllMoves(player)
+            scores = np.empty(len(possible_moves))
+            for i, move in enumerate(possible_moves):
+                scores[i] = self.minMax(move, self.state, 2, -np.inf, np.inf, False, player.idt)
+            print(list(zip(possible_moves, scores)))
 
-            if np.random.random() < .5:  # place new token
-                positions = self.state.getAllEmpty()
-                pos = randomChoice(positions)
-                self.state.addToken(player, pos)
-
-            else:  # move token
-                tokens_with_moves = self.state.getAllMoves(player)
-                token = randomChoice(list(tokens_with_moves.keys()))
-                direction = randomChoice(tokens_with_moves[token])
-                self.state.moveToken(token, direction)
-
+            move = possible_moves[np.argmax(scores)]
+            if move[0] == 0:
+                self.state.addToken(player, move[1])
+            else:
+                self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
             player.has_played = True
 
         else:
