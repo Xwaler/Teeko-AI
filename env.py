@@ -121,9 +121,9 @@ class Teeko:
 
             for child_move in new_state.getAllMoves(player):
                 score = self.minMax(child_move, new_state, depth - 1, alpha, beta, False, primary_player_idt)
-                max_score = max(max_score, score)
+                max_score = np.max([max_score, score])
 
-                alpha = max(alpha, score)
+                alpha = np.max([alpha, score])
                 if beta <= alpha:
                     break
             return max_score
@@ -133,9 +133,9 @@ class Teeko:
 
             for child_move in new_state.getAllMoves(other_player):
                 score = self.minMax(child_move, new_state, depth - 1, alpha, beta, True, primary_player_idt)
-                min_score = min(min_score, score)
+                min_score = np.min([min_score, score])
 
-                alpha = min(alpha, score)
+                beta = np.min([beta, score])
                 if beta <= alpha:
                     break
             return min_score
@@ -147,8 +147,11 @@ class Teeko:
             possible_moves = self.state.getAllMoves(player)
             scores = np.empty(len(possible_moves))
             for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, self.state, 2, -np.inf, np.inf, player.idt == 1, player.idt)
-            print(list(zip(possible_moves, scores)))
+                scores[i] = self.minMax(move, self.state, 2,
+                                        np.max(scores) if player.idt == 1 else -np.inf,
+                                        np.min(scores) if player.idt == 2 else np.inf,
+                                        player.idt != 1, player.idt)
+            print(player.idt, list(zip(possible_moves, scores)))
 
             if player.idt == 1:
                 move = possible_moves[np.argmax(scores)]
