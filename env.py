@@ -30,7 +30,7 @@ class Teeko:
 
         self.players = np.empty(2, dtype=Player)
         for i in [1, 2]:
-            self.players[i - 1] = Player(i, AI=i == 1)
+            self.players[i - 1] = Player(i, AI=i == 1,)
             # self.players[i - 1] = Player(i, AI=True)
 
         for player in self.players:
@@ -42,6 +42,20 @@ class Teeko:
                     j += 1
 
         self.turn_to = randomChoice(self.players)
+
+        self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
+
+        self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
+        self.playerone = self.font.render('Player 1', True, BLACK)
+        self.playeronerect = self.playerone.get_rect()
+        self.playeronerect.center = (int((SCREEN_SIZE[0] - self.square_width*GRID_SIZE) / 4), 150)
+
+        self.playertwo = self.font.render('Player 2', True, BLACK)
+        self.playertworect = self.playertwo.get_rect()
+        self.playertworect.center = (int(3*(SCREEN_SIZE[0] - self.square_width * GRID_SIZE)/4)+self.square_width*GRID_SIZE, 150)
+
+        self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
+                              '< Back', BACKGROUND)
 
     def addToken(self, player, pos):
         self.grid[pos[0]][pos[1]] = player.idt
@@ -114,17 +128,28 @@ class Teeko:
             player.has_played = False
 
     def render(self):
-        square_width = SCREEN_SIZE[1] // GRID_SIZE
-        self.surf.fill((200, 200, 200))
+        self.surf.fill(BACKGROUND)
+
+        self.surf.blit(self.playerone, self.playeronerect)
+        self.surf.blit(self.playertwo, self.playertworect)
+
+        if self.backbtn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.backbtn.hover(self.surf)
+        else:
+            self.backbtn.drawRect(self.surf)
+
+        pygame.draw.rect(self.surf,BLACK,( (SCREEN_SIZE[0]-self.square_width*GRID_SIZE)/2,(SCREEN_SIZE[1]-self.square_width*GRID_SIZE)/2,self.square_width*GRID_SIZE , self.square_width*GRID_SIZE),3)
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
-                pygame.draw.circle(self.surf, RED if self.grid[j][i] == 2 else BLACK,
-                                   (i * square_width + square_width // 2, j * square_width + square_width // 2),
-                                   TOKEN_RADIUS, TOKEN_THICKNESS if self.grid[j][i] == 0 else 0)
+                pygame.draw.circle(self.surf, RED if self.grid[j][i] == 2 else BLACK,((i * self.square_width + self.square_width // 2)+int((SCREEN_SIZE[0]-self.square_width*GRID_SIZE)/2), j * self.square_width + self.square_width // 2+int((SCREEN_SIZE[1]-self.square_width*GRID_SIZE)/2)),TOKEN_RADIUS, TOKEN_THICKNESS if self.grid[j][i] == 0 else 0)
 
     def parse_event(self, event):
-        pass
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            if self.backbtn.on_button(pos):
+                return CODE_TO_MENU
+
 
     def print(self):
         print(self.grid)
