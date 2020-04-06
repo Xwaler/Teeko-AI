@@ -3,8 +3,8 @@ DIRECTIONS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 
 SURROUNDING = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
 
 SCREEN_SIZE = (1200, 800)
-TOKEN_RADIUS = 50
-TOKEN_THICKNESS = 5
+TOKEN_RADIUS = 45
+TOKEN_THICKNESS = 2
 
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
