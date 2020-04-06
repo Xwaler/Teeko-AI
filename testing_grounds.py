@@ -113,7 +113,6 @@ def getScore(grid):
 
 
 def evaluateMove(currentState, depth, currentChain):
-
     if depth < 3:
 
         print("currentState : \n", currentState)
