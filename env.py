@@ -41,6 +41,54 @@ class State:
                     j += 1
         return self
 
+    def getSurrounding(self, token):
+        directions = []
+
+        for shift in SURROUNDING:
+
+            if (0 <= token.pos[0] + shift[0] < 5 and 0 <= token.pos[1] + shift[1] < 5 and self.grid[token.pos[0] + shift[0]][
+                token.pos[1] + shift[1]] == self.grid[token.pos[0]][token.pos[1]]) or (
+                    0 <= token.pos[0] - shift[0] < 5 and 0 <= token.pos[1] - shift[1] < 5 and self.grid[token.pos[0] - shift[0]][
+                token.pos[1] - shift[1]] == self.grid[token.pos[0]][token.pos[1]]):
+                directions.append(shift)
+
+        return directions
+
+    def getAligned(self, player):
+        longestLine = 1
+
+        for token in player.tokens:
+
+            for direction in self.getSurrounding(token):
+
+                if not (direction == [-1, -1] and (np.abs(token.pos[0] - token.pos[1]) > 1) or direction == [-1, 1] and (
+                        token.pos[0] + token.pos[1] > 5 or token.pos[0] + token.pos[1] < 3)):
+
+                    i = 1
+
+                    currentLine = 1
+
+                    while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
+                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] == player.idt:
+                        currentLine = currentLine + 1
+                        i = i + 1
+
+                    i = -1
+
+                    while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
+                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] == player.idt:
+                        currentLine = currentLine + 1
+                        i = i - 1
+
+                    if longestLine < currentLine:
+
+                        longestLine = currentLine
+
+                        if longestLine > 2:
+                            return longestLine
+
+        return longestLine
+
     def addToken(self, player, pos):
         token = Token(player, pos)
         self.grid[pos[0]][pos[1]] = token
@@ -88,10 +136,20 @@ class State:
     def over(self):
         # TODO: ALED GUILLAUME
         # return max(self.getAligned(1), self.getAligned(2)) >= 4
-        return False
+
+        longestAlignment = 1
+
+        for player in self.players:
+
+            playerLongestAlignment = self.getAligned(player)
+
+            if playerLongestAlignment > longestAlignment:
+                longestAlignment = playerLongestAlignment
+
+        return bool(longestAlignment >= 4)
 
     def get_score(self, player):
-        max_align = np.random.randint(0, 5)
+        max_align = self.getAligned(player)
         return max_align * (-1 if player.idt == 2 else 1)
 
 
