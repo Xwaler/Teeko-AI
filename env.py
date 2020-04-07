@@ -29,6 +29,7 @@ class Player:
     def __repr__(self):
         return self.idt.__repr__()
 
+
 class State:
     def __init__(self):
         self.grid = None
@@ -50,52 +51,83 @@ class State:
                     j += 1
         return self
 
-    def getSurrounding(self, token):
-        directions = []
-
-        for shift in SURROUNDING:
-
-            if (0 <= token.pos[0] + shift[0] < 5 and 0 <= token.pos[1] + shift[1] < 5 and self.grid[token.pos[0] + shift[0]][
-                token.pos[1] + shift[1]] is not None and self.grid[token.pos[0] + shift[0]][
-                token.pos[1] + shift[1]].player.idt == self.grid[token.pos[0]][token.pos[1]].player.idt) or (
-                    0 <= token.pos[0] - shift[0] < 5 and 0 <= token.pos[1] - shift[1] < 5 and self.grid[token.pos[0] - shift[0]][
-                token.pos[1] - shift[1]] is not None and self.grid[token.pos[0] - shift[0]][
-                token.pos[1] - shift[1]].player.idt == self.grid[token.pos[0]][token.pos[1]].player.idt):
-                directions.append(shift)
-
-        return directions
+    # def getSurrounding(self, token):
+    #     directions = []
+    #
+    #     for shift in SURROUNDING:
+    #
+    #         if (0 <= token.pos[0] + shift[0] < 5 and 0 <= token.pos[1] + shift[1] < 5 and
+    #             self.grid[token.pos[0] + shift[0]][
+    #                 token.pos[1] + shift[1]] is not None and self.grid[token.pos[0] + shift[0]][
+    #                 token.pos[1] + shift[1]].player.idt == self.grid[token.pos[0]][token.pos[1]].player.idt) or (
+    #                 0 <= token.pos[0] - shift[0] < 5 and 0 <= token.pos[1] - shift[1] < 5 and
+    #                 self.grid[token.pos[0] - shift[0]][
+    #                     token.pos[1] - shift[1]] is not None and self.grid[token.pos[0] - shift[0]][
+    #                     token.pos[1] - shift[1]].player.idt == self.grid[token.pos[0]][token.pos[1]].player.idt):
+    #             directions.append(shift)
+    #
+    #     return directions
 
     def getAligned(self, player):
         longestLine = 1
 
         for token in player.tokens:
 
-            for direction in self.getSurrounding(token):
+            for direction in DIRECTIONS:
 
-                if not (direction == [-1, -1] and (np.abs(token.pos[0] - token.pos[1]) > 1) or direction == [-1, 1] and (
-                        token.pos[0] + token.pos[1] > 5 or token.pos[0] + token.pos[1] < 3)):
+                if not (direction == [-1, -1] and (np.abs(token.pos[0] - token.pos[1]) > 1) or direction == [-1,
+                                                                                                             1] and (
+                                token.pos[0] + token.pos[1] > 5 or token.pos[0] + token.pos[1] < 3)):
 
-                    i = 1
+                    currentAlignment = 1
 
-                    currentLine = 1
+                    newline = token.pos[0] + direction[0]
+                    newcolumn = token.pos[1] + direction[1]
 
-                    while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
-                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] is not None and\
-                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]].player.idt == player.idt:
-                        currentLine = currentLine + 1
-                        i = i + 1
+                    while (0 <= newline < 5 and 0 <= newcolumn < 5 and self.grid[newline][newcolumn] is not None and
+                           self.grid[newline][newcolumn].player.idt == self.grid[token.pos[0]][
+                               token.pos[1]].player.idt):
+                        newline = newline + direction[0]
+                        newcolumn = newcolumn + direction[1]
 
-                    i = -1
+                        currentAlignment += 1
 
-                    while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
-                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] is not None and \
-                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]].player.idt == player.idt:
-                        currentLine = currentLine + 1
-                        i = i - 1
+                    newline = token.pos[0] - direction[0]
+                    newcolumn = token.pos[1] - direction[1]
 
-                    if longestLine < currentLine:
+                    while (0 <= newline < 5 and 0 <= newcolumn < 5 and self.grid[newline][newcolumn] is not None and
+                           self.grid[newline][newcolumn].player.idt == self.grid[token.pos[0]][
+                               token.pos[1]].player.idt):
+                        newline = newline - direction[0]
+                        newcolumn = newcolumn - direction[1]
 
-                        longestLine = currentLine
+                        currentAlignment += 1
+
+                    if currentAlignment > longestLine:
+                        longestLine = currentAlignment
+                    # i = 1
+                    #
+                    # currentLine = 1
+                    #
+                    # while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
+                    #         self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] is not None and \
+                    #         self.grid[token.pos[0] + i * direction[0]][
+                    #             token.pos[1] + i * direction[1]].player.idt == player.idt:
+                    #     currentLine = currentLine + 1
+                    #     i = i + 1
+                    #
+                    # i = -1
+                    #
+                    # while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
+                    #         self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] is not None and \
+                    #         self.grid[token.pos[0] + i * direction[0]][
+                    #             token.pos[1] + i * direction[1]].player.idt == player.idt:
+                    #     currentLine = currentLine + 1
+                    #     i = i - 1
+
+                    if longestLine < currentAlignment:
+
+                        longestLine = currentAlignment
 
                         if longestLine > 2:
                             return longestLine
@@ -187,7 +219,7 @@ class Teeko:
         self.playertwo = self.font.render('Player 2', True, BLACK)
         self.playertworect = self.playertwo.get_rect()
         self.playertworect.center = (
-        int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
+            int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
 
         self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                               '< Back', BACKGROUND)
@@ -259,7 +291,7 @@ class Teeko:
             print(self.state.grid)
 
             for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, self.state, 3, -np.inf, np.inf, player.idt != 1, player.idt)
+                scores[i] = self.minMax(move, self.state, 2, -np.inf, np.inf, player.idt != 1, player.idt)
             print(player.idt, list(zip(possible_moves, scores)))
 
             if player.idt == 1:
@@ -293,11 +325,18 @@ class Teeko:
         else:
             self.backbtn.drawRect(self.surf)
 
-        pygame.draw.rect(self.surf,BLACK,( (SCREEN_SIZE[0]-self.square_width*GRID_SIZE)/2,(SCREEN_SIZE[1]-self.square_width*GRID_SIZE)/2,self.square_width*GRID_SIZE , self.square_width*GRID_SIZE),3)
+        pygame.draw.rect(self.surf, BLACK, (
+        (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
+        self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
-                pygame.draw.circle(self.surf, RED if self.state.grid[j][i] == 2 else BLACK,((i * self.square_width + self.square_width // 2)+int((SCREEN_SIZE[0]-self.square_width*GRID_SIZE)/2), j * self.square_width + self.square_width // 2+int((SCREEN_SIZE[1]-self.square_width*GRID_SIZE)/2)),TOKEN_RADIUS, TOKEN_THICKNESS if self.state.grid[j][i] == 0 else 0)
+                pygame.draw.circle(self.surf, RED if self.state.grid[j][i] == 2 else BLACK, (
+                (i * self.square_width + self.square_width // 2) + int(
+                    (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                j * self.square_width + self.square_width // 2 + int(
+                    (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
+                                   TOKEN_THICKNESS if self.state.grid[j][i] == 0 else 0)
 
     def parse_event(self, event):
         pass
