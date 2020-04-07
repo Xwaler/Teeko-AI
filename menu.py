@@ -34,6 +34,7 @@ class Menu:
 
         self.INDEXCOLORONE = 0
         self.INDEXCOLORTWO = 1
+        self.indexdifficulty = 0
 
         self.colorbtnone = ColorChanger(int((SCREEN_SIZE[0] - 400) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
                                         COLORS[self.INDEXCOLORONE])
@@ -50,9 +51,11 @@ class Menu:
         self.playertworect = self.playertwo.get_rect()
         self.playertworect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 350), (SCREEN_SIZE[1] - 30) / 2 + 30)
 
-        self.startbtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 200, 50, 'Start',
+        self.startbtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 220, 200, 50, 'Start',
                                BACKGROUND)
-        self.leavebtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 220, 200, 50, 'Leave',
+        self.settingsbtn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50, 'AI  Difficulty : ' + DIFFICULTY[self.indexdifficulty],
+                               BACKGROUND)
+        self.leavebtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 290, 200, 50, 'Leave',
                                BACKGROUND)
 
     def parse_event(self, event):
@@ -61,6 +64,14 @@ class Menu:
 
             if self.startbtn.on_button(pos):
                 return CODE_TO_GAME
+
+            if self.settingsbtn.on_button(pos):
+                if self.indexdifficulty < 2:
+                    self.indexdifficulty +=1
+                else:
+                    self.indexdifficulty = 0
+
+                self.settingsbtn.text = 'AI  Difficulty : ' + DIFFICULTY[self.indexdifficulty]
 
             if self.leavebtn.on_button(pos):
                 pygame.quit()
@@ -95,6 +106,11 @@ class Menu:
             self.startbtn.hover(self.surf)
         else:
             self.startbtn.drawRect(self.surf)
+
+        if self.settingsbtn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.settingsbtn.hover(self.surf)
+        else:
+            self.settingsbtn.drawRect(self.surf)
 
         if self.leavebtn.get_rect().collidepoint(pygame.mouse.get_pos()):
             self.leavebtn.hover(self.surf)
