@@ -139,6 +139,15 @@ class State:
         self.grid[pos[0]][pos[1]] = token
         player.tokens.append(token)
 
+    def removeToken(self, player, pos):
+
+        self.grid[pos[0]][pos[1]] = None
+
+        for token in player.tokens:
+            if token.pos[0] == pos[0] and token.pos[1] == pos[1]:
+                player.tokens.remove(token)
+                break
+
     def moveToken(self, token, direction):
         self.grid[token.pos[0]][token.pos[1]] = None
         self.grid[token.pos[0] + direction[0]][token.pos[1] + direction[1]] = token
@@ -225,37 +234,41 @@ class Teeko:
                               '< Back', BACKGROUND)
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
-    def minMax(self, move, current_state, depth, alpha, beta, maximizing_player, primary_player_idt):
+    def minMax(self, move, depth, alpha, beta, maximizing_player, primary_player_idt):
 
         print("depth : ", depth)
 
-        new_state = deepcopy(current_state)
+        print("state : \n", self.state.grid)
 
-        print("state : \n", new_state.grid)
-
-        player = new_state.players[primary_player_idt - 1]
+        player = self.state.players[primary_player_idt - 1]
 
         print("player : ", player.idt)
 
-        other_player = new_state.players[abs(primary_player_idt - 2)]
+        other_player = self.state.players[abs(primary_player_idt - 2)]
 
         print("move : ", move)
 
         if move[0] == 0:
-            new_state.addToken(player, move[1])
+            self.state.addToken(player, move[1])
         else:
-            new_state.moveToken(new_state.grid[move[1][0]][move[1][1]], move[2])
+            self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
 
-        print("state after move : \n", new_state.grid)
+        print("state after move : \n", self.state.grid)
 
-        if depth == 0 or new_state.over():
-            return new_state.get_score(player)
+        if depth == 0 or self.state.over():
+
+            if move[0] == 0:
+                self.state.removeToken(player, move[1])
+            else:
+                self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]], [-move[2][0], -move[2][1]])
+
+            return self.state.get_score(player)
 
         if maximizing_player:
             max_score = -np.inf
 
-            for child_move in new_state.getAllMoves(player):
-                score = self.minMax(child_move, new_state, depth - 1, alpha, beta, False, primary_player_idt)
+            for child_move in self.state.getAllMoves(player):
+                score = self.minMax(child_move, depth - 1, alpha, beta, False, primary_player_idt)
 
                 print("score : ", score)
 
@@ -264,13 +277,19 @@ class Teeko:
                 alpha = np.max([alpha, score])
                 if beta <= alpha:
                     break
+
+            if move[0] == 0:
+                self.state.removeToken(player, move[1])
+            else:
+                self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]], [-move[2][0], -move[2][1]])
+
             return max_score
 
         else:
             min_score = np.inf
 
-            for child_move in new_state.getAllMoves(other_player):
-                score = self.minMax(child_move, new_state, depth - 1, alpha, beta, True, primary_player_idt)
+            for child_move in self.state.getAllMoves(other_player):
+                score = self.minMax(child_move, depth - 1, alpha, beta, True, primary_player_idt)
 
                 print("score : ", score)
 
@@ -279,6 +298,12 @@ class Teeko:
                 beta = np.min([beta, score])
                 if beta <= alpha:
                     break
+
+            if move[0] == 0:
+                self.state.removeToken(player, move[1])
+            else:
+                self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]], [-move[2][0], -move[2][1]])
+
             return min_score
 
     def update(self):
@@ -291,7 +316,7 @@ class Teeko:
             print(self.state.grid)
 
             for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, self.state, 2, -np.inf, np.inf, player.idt != 1, player.idt)
+                scores[i] = self.minMax(move, 2, -np.inf, np.inf, player.idt != 1, player.idt)
             print(player.idt, list(zip(possible_moves, scores)))
 
             if player.idt == 1:
