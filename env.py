@@ -1,3 +1,4 @@
+import math
 import sys
 import threading
 import time
@@ -10,6 +11,7 @@ class Token:
         self.pos = np.array(pos)
         self.player = player
 
+
     def __str__(self):
         return self.pos
 
@@ -18,6 +20,25 @@ class Token:
 
     def move(self, direction):
         self.pos += direction
+
+
+class TokenView:
+    def __init__(self, surf,x,y):
+        self.surf = surf
+        self.x = x
+        self.y = y
+
+    def drawToken(self,color):
+        self.color = color
+        pygame.draw.circle(self.surf,color, (self.x, self.y), TOKEN_RADIUS)
+
+    def on_token(self,pos):
+        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
+            return True
+        return False
+
+    def drag(self,pos):
+        pygame.draw.circle(self.surf, self.color, (pos[0], pos[1]), TOKEN_RADIUS)
 
 
 class Player:
@@ -199,9 +220,9 @@ class State:
 
     def get_score(self):
         p1 = self.getAligned(self.players[0])
-        print("p1 : ", p1)
+        #print("p1 : ", p1)
         p2 = self.getAligned(self.players[1])
-        print("p2 : ", p2)
+        #print("p2 : ", p2)
         return p1 - p2
 
 
@@ -211,9 +232,9 @@ class Teeko:
         self.state = State().__random_start__()
         self.turn_to = randomChoice(self.state.players)
 
+        self.playerstokens = []
         self.end_last_turn = 0
-        self.playeronecolor = None
-        self.playertwocolor = None
+        self.playerscolors = []
 
         self.minmax_thread = None
         self.kill_thread = False
@@ -230,23 +251,36 @@ class Teeko:
         self.playertworect.center = (
             int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
 
+        for k in range(0, 2):
+            print(k)
+            for l in range(0, 4):
+                print(l)
+                self.playerstokens.append((k, TokenView(self.surf, (
+                        int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
+                        k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2))), l * (TOKEN_RADIUS * 2 + 30) + 250)))
+
+
         self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                               '< Back', BACKGROUND)
+
+        self.token_dragging = False
+        self.offset_Y = 0
+        self.offset_X = 0
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, move, depth, alpha, beta, maximizing_player, player_id):
         if self.kill_thread:
             raise SystemExit()
 
-        print("\n\ndepth : ", depth)
+       # print("\n\ndepth : ", depth)
 
-        print("state : \n", self.state.grid)
+        #print("state : \n", self.state.grid)
 
         player = self.state.players[player_id - 1]
 
-        print("player : ", player.idt)
+        #print("player : ", player.idt)
 
-        print("move : ", move)
+        #print("move : ", move)
 
         if move is not None:
             if move[0] == 0:
@@ -254,7 +288,7 @@ class Teeko:
             else:
                 self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
 
-            print("state after move : \n", self.state.grid)
+            #print("state after move : \n", self.state.grid)
 
             if depth == 0 or self.state.over(player):
                 if move[0] == 0:
@@ -272,7 +306,7 @@ class Teeko:
             for child_move in self.state.getAllMoves(player):
                 score = self.minMax(child_move, depth - 1, alpha, beta, False, abs(player_id - 1))
 
-                print("score : ", score)
+                #print("score : ", score)
 
                 if score >= max_score:
                     max_score = score
@@ -303,7 +337,7 @@ class Teeko:
             for child_move in self.state.getAllMoves(player):
                 score = self.minMax(child_move, depth - 1, alpha, beta, True, abs(player_id - 1))
 
-                print("score : ", score)
+               # print("score : ", score)
 
                 if score < min_score:
                     min_score = score
@@ -329,7 +363,7 @@ class Teeko:
 
     def AI_handler(self, player):
         move = self.minMax(None, MAX_DEPTH, -np.inf, np.inf, player.idt == 1, player.idt)
-        print('Selected move : ', move)
+        #print('Selected move : ', move)
 
         if move[0] == 0:
             self.state.addToken(player, move[1])
@@ -372,17 +406,17 @@ class Teeko:
             (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
             self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
 
-        #Player One Token
-
-        for k in range(TOKEN_NUMBER):
-            pygame.draw.circle(self.surf,self.playeronecolor,(int((SCREEN_SIZE[0]-self.square_width*GRID_SIZE)/4), k*(TOKEN_RADIUS*2 + 30) + 250), TOKEN_RADIUS)
-            pygame.draw.circle(self.surf, self.playertwocolor, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE)*3 / 4) + self.square_width*GRID_SIZE, k * (TOKEN_RADIUS * 2 + 30) + 250), TOKEN_RADIUS)
+        for Tokens in self.playerstokens:
+            if Tokens[0] == 0:
+                Tokens[1].drawToken(self.playerscolors[0])
+            else:
+                Tokens[1].drawToken(self.playerscolors[1])
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 pygame.draw.circle(self.surf,
-                                   self.playertwocolor if self.state.grid[j][i] is not None and self.state.grid[j][
-                                       i].player.idt == 2 else self.playeronecolor if self.state.grid[j][i] is not None and self.state.grid[j][
+                                   self.playerscolors[1] if self.state.grid[j][i] is not None and self.state.grid[j][
+                                       i].player.idt == 2 else self.playerscolors[0] if self.state.grid[j][i] is not None and self.state.grid[j][
                                        i].player.idt == 1 else BLACK, (
                                        (i * self.square_width + self.square_width // 2) + int(
                                            (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
@@ -394,6 +428,22 @@ class Teeko:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.backbtn.on_button(pos):
                 return CODE_TO_MENU
+
+            for TokenView in self.playerstokens:
+                if TokenView[1].on_token(pos):
+                    self.offset_X = TokenView[1].x - pos[0]
+                    self.offset_Y = TokenView[1].y - pos[1]
+                    self.token_dragging = True
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.token_dragging = False
+        if event.type == pygame.MOUSEMOTION:
+            for TokenView in self.playerstokens:
+                if self.token_dragging:
+                    newX = self.offset_X + pos[0]
+                    newY = self.offset_Y + pos[1]
+                    TokenView[1].drag((newX,newY))
+
 
 
     def print(self):
