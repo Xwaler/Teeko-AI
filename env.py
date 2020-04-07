@@ -1,4 +1,5 @@
 import sys
+import threading
 from copy import deepcopy
 
 from tools import *
@@ -187,18 +188,16 @@ class State:
                     positions.append((j, i))
         return positions
 
-    def over(self):
+    def over(self, player):
         # TODO: ALED GUILLAUME
         # return max(self.getAligned(1), self.getAligned(2)) >= 4
 
         longestAlignment = 1
 
-        for player in self.players:
+        playerLongestAlignment = self.getAligned(player)
 
-            playerLongestAlignment = self.getAligned(player)
-
-            if playerLongestAlignment > longestAlignment:
-                longestAlignment = playerLongestAlignment
+        if playerLongestAlignment > longestAlignment:
+            longestAlignment = playerLongestAlignment
 
         return bool(longestAlignment >= 4)
 
@@ -218,6 +217,9 @@ class Teeko:
         self.state = State().__random_start__()
         self.turn_to = randomChoice(self.state.players)
 
+        self.minmax_thread = None
+        self.kill_thread = False
+
         self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
@@ -235,6 +237,8 @@ class Teeko:
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, move, depth, alpha, beta, maximizing_player, primary_player_idt):
+        if self.kill_thread:
+            raise SystemExit()
 
         print("depth : ", depth)
 
@@ -255,7 +259,7 @@ class Teeko:
 
         print("state after move : \n", self.state.grid)
 
-        if depth == 0 or self.state.over():
+        if depth == 0 or self.state.over(player):
 
             if move[0] == 0:
                 self.state.removeToken(player, move[1])
@@ -306,29 +310,34 @@ class Teeko:
 
             return min_score
 
+    def AI_handler(self, player):
+        possible_moves = self.state.getAllMoves(player)
+        scores = np.empty(len(possible_moves))
+
+        print(self.state.grid)
+
+        for i, move in enumerate(possible_moves):
+            scores[i] = self.minMax(move, 2, -np.inf, np.inf, player.idt != 1, player.idt)
+        print(player.idt, list(zip(possible_moves, scores)))
+
+        if player.idt == 1:
+            move = possible_moves[np.argmax(scores)]
+        else:
+            move = possible_moves[np.argmin(scores)]
+
+        if move[0] == 0:
+            self.state.addToken(player, move[1])
+        else:
+            self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
+        player.has_played = True
+
     def update(self):
         player = self.turn_to
 
         if player.AI:
-            possible_moves = self.state.getAllMoves(player)
-            scores = np.empty(len(possible_moves))
-
-            print(self.state.grid)
-
-            for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, 2, -np.inf, np.inf, player.idt != 1, player.idt)
-            print(player.idt, list(zip(possible_moves, scores)))
-
-            if player.idt == 1:
-                move = possible_moves[np.argmax(scores)]
-            else:
-                move = possible_moves[np.argmin(scores)]
-
-            if move[0] == 0:
-                self.state.addToken(player, move[1])
-            else:
-                self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
-            player.has_played = True
+            if not player.has_played:
+                self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
+                self.minmax_thread.start()
 
         else:
             # waits about a sec
@@ -351,16 +360,16 @@ class Teeko:
             self.backbtn.drawRect(self.surf)
 
         pygame.draw.rect(self.surf, BLACK, (
-        (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
-        self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
+            (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
+            self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 pygame.draw.circle(self.surf, RED if self.state.grid[j][i] == 2 else BLACK, (
-                (i * self.square_width + self.square_width // 2) + int(
-                    (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-                j * self.square_width + self.square_width // 2 + int(
-                    (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
+                    (i * self.square_width + self.square_width // 2) + int(
+                        (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                    j * self.square_width + self.square_width // 2 + int(
+                        (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
                                    TOKEN_THICKNESS if self.state.grid[j][i] == 0 else 0)
 
     def parse_event(self, event):

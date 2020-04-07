@@ -10,13 +10,7 @@ def main():
     pygame.init()
     pygame.display.set_caption('Teeko-AI')
     icon = pygame.image.load('Teeko_logo.png')
-    icon = pygame.transform.scale(icon, (32, 32))
-    surface = pygame.Surface(icon.get_size())
-    key = (0,255,0)
-    surface.fill(key)
-    surface.set_colorkey(key)
-    surface.blit(icon, (0, 0))
-    pygame.display.set_icon(surface)
+    pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
 
     page_manager = PageManager()
@@ -30,6 +24,8 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 pygame.quit()
+                if game.minmax_thread is not None and game.minmax_thread.isAlive():
+                    game.kill_thread = True
                 quit()
 
             code = page_manager.current.parse_event(event)
@@ -42,11 +38,9 @@ def main():
         if page_manager.current == game:
             game.update()
 
-
         display.fill(BACKGROUND)
-        display.blit(page_manager.current.surf, (0,0))
+        display.blit(page_manager.current.surf, (0, 0))
         page_manager.current.render()
-
 
         pygame.display.update()
         clock.tick(60)
