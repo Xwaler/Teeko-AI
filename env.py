@@ -1,5 +1,6 @@
 import sys
 import threading
+import time
 
 from tools import *
 
@@ -42,13 +43,13 @@ class State:
         for i in [1, 2]:
             self.players[i - 1] = Player(i, AI=True)
 
-        for player in self.players:
-            j = 0
-            while j < 4:
-                pos = np.random.randint(0, 5, 2)
-                if self.grid[pos[0]][pos[1]] is None:
-                    self.addToken(player, pos)
-                    j += 1
+        # for player in self.players:
+        #     j = 0
+        #     while j < 4:
+        #         pos = np.random.randint(0, 5, 2)
+        #         if self.grid[pos[0]][pos[1]] is None:
+        #             self.addToken(player, pos)
+        #             j += 1
         return self
 
     # def getSurrounding(self, token):
@@ -170,11 +171,12 @@ class State:
     def getAllMoves(self, player):
         moves = []
 
-        for token in player.tokens:
-            moves.extend(self.getPossibleMove(token))
-
         if len(player.tokens) < 4:
-            moves.extend([[0, pos.tolist(), [0, 0]] for pos in self.getAllEmpty()])
+            moves.extend([[0, pos, [0, 0]] for pos in self.getAllEmpty()])
+
+        else:
+            for token in player.tokens:
+                moves.extend(self.getPossibleMove(token))
 
         return moves
 
@@ -183,29 +185,23 @@ class State:
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 if self.grid[j][i] is None:
-                    positions.append((j, i))
+                    positions.append([j, i])
         return positions
 
     def over(self, player):
-        # TODO: ALED GUILLAUME
-        # return max(self.getAligned(1), self.getAligned(2)) >= 4
-
         longestAlignment = 1
-
         playerLongestAlignment = self.getAligned(player)
 
         if playerLongestAlignment > longestAlignment:
             longestAlignment = playerLongestAlignment
 
-        return bool(longestAlignment >= 4)
+        return longestAlignment >= 4
 
-    def get_score(self, player):
-        # max_align = self.getAligned(player)
-        # return max_align * (-1 if player.idt == 2 else 1)
-
+    def get_score(self):
         p1 = self.getAligned(self.players[0])
         print("p1 : ", p1)
         p2 = self.getAligned(self.players[1])
+        print("p2 : ", p2)
         return p1 - p2
 
 
@@ -214,6 +210,8 @@ class Teeko:
         self.surf = surf
         self.state = State().__random_start__()
         self.turn_to = randomChoice(self.state.players)
+
+        self.end_last_turn = 0
 
         self.minmax_thread = None
         self.kill_thread = False
@@ -238,7 +236,7 @@ class Teeko:
         if self.kill_thread:
             raise SystemExit()
 
-        print("depth : ", depth)
+        print("\n\ndepth : ", depth)
 
         print("state : \n", self.state.grid)
 
@@ -263,20 +261,22 @@ class Teeko:
                     self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
                                          [-move[2][0], -move[2][1]])
 
-                return self.state.get_score(player)
+                return self.state.get_score()
 
         if maximizing_player:
             max_score = -np.inf
-            best_move = None
+            max_score_moves = []
 
             for child_move in self.state.getAllMoves(player):
                 score = self.minMax(child_move, depth - 1, alpha, beta, False, abs(player_id - 1))
 
                 print("score : ", score)
 
-                if score > max_score:
+                if score >= max_score:
                     max_score = score
-                    best_move = child_move
+                    max_score_moves = []
+                if score == max_score:
+                    max_score_moves.append(child_move)
 
                 alpha = np.max([alpha, score])
                 if beta <= alpha:
@@ -289,16 +289,14 @@ class Teeko:
                     self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
                                          [-move[2][0], -move[2][1]])
 
-            print("state after reset : \n", self.state.grid)
-
             if depth != MAX_DEPTH:
                 return max_score
             else:
-                return best_move
+                return randomChoice(max_score_moves)
 
         else:
             min_score = np.inf
-            best_move = None
+            min_score_moves = []
 
             for child_move in self.state.getAllMoves(player):
                 score = self.minMax(child_move, depth - 1, alpha, beta, True, abs(player_id - 1))
@@ -307,7 +305,9 @@ class Teeko:
 
                 if score < min_score:
                     min_score = score
-                    best_move = child_move
+                    min_score_moves = []
+                if score == min_score:
+                    min_score_moves.append(child_move)
 
                 beta = np.min([beta, score])
                 if beta <= alpha:
@@ -323,7 +323,7 @@ class Teeko:
             if depth != MAX_DEPTH:
                 return min_score
             else:
-                return best_move
+                return randomChoice(min_score_moves)
 
     def AI_handler(self, player):
         move = self.minMax(None, MAX_DEPTH, -np.inf, np.inf, player.idt == 1, player.idt)
@@ -336,23 +336,24 @@ class Teeko:
 
         player.has_played = True
         self.minmax_thread = None
+        self.end_last_turn = time.time()
 
     def update(self):
-        player = self.turn_to
+        if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
+            player = self.turn_to
 
-        if not player.has_played:
-            if player.AI and self.minmax_thread is None:
-                self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
-                self.minmax_thread.start()
+            if not player.has_played:
+                if player.AI and self.minmax_thread is None:
+                    self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
+                    self.minmax_thread.start()
 
-            else:
-                # waits about a sec
-                if np.random.random() < 1 / 60:
+                else:
+                    # TODO
                     player.has_played = True
 
-        else:
-            self.turn_to = self.state.players[abs(np.where(self.state.players == player)[0][0] - 1)]
-            player.has_played = False
+            else:
+                self.turn_to = self.state.players[abs(np.where(self.state.players == player)[0][0] - 1)]
+                player.has_played = False
 
     def render(self):
         self.surf.fill(BACKGROUND)
