@@ -63,6 +63,7 @@ class Menu:
             pos = pygame.mouse.get_pos()
 
             if self.startbtn.on_button(pos):
+
                 return CODE_TO_GAME
 
             if self.settingsbtn.on_button(pos):

@@ -212,6 +212,8 @@ class Teeko:
         self.turn_to = randomChoice(self.state.players)
 
         self.end_last_turn = 0
+        self.playeronecolor = None
+        self.playertwocolor = None
 
         self.minmax_thread = None
         self.kill_thread = False
@@ -370,19 +372,29 @@ class Teeko:
             (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
             self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
 
+        #Player One Token
+
+        for k in range(TOKEN_NUMBER):
+            pygame.draw.circle(self.surf,self.playeronecolor,(int((SCREEN_SIZE[0]-self.square_width*GRID_SIZE)/4), k*(TOKEN_RADIUS*2 + 30) + 250), TOKEN_RADIUS)
+            pygame.draw.circle(self.surf, self.playertwocolor, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE)*3 / 4) + self.square_width*GRID_SIZE, k * (TOKEN_RADIUS * 2 + 30) + 250), TOKEN_RADIUS)
+
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 pygame.draw.circle(self.surf,
-                                   RED if self.state.grid[j][i] is not None and self.state.grid[j][
-                                       i].player.idt == 2 else BLACK, (
+                                   self.playertwocolor if self.state.grid[j][i] is not None and self.state.grid[j][
+                                       i].player.idt == 2 else self.playeronecolor if self.state.grid[j][i] is not None and self.state.grid[j][
+                                       i].player.idt == 1 else BLACK, (
                                        (i * self.square_width + self.square_width // 2) + int(
                                            (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
                                        j * self.square_width + self.square_width // 2 + int(
-                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
-                                   TOKEN_THICKNESS if self.state.grid[j][i] is None else 0)
+                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS, TOKEN_THICKNESS if self.state.grid[j][i] is None else 0)
 
     def parse_event(self, event):
-        pass
+        pos = pygame.mouse.get_pos()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.backbtn.on_button(pos):
+                return CODE_TO_MENU
+
 
     def print(self):
         print(self.grid)

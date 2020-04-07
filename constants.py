@@ -2,6 +2,7 @@ GRID_SIZE = 5
 DIRECTIONS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 SURROUNDING = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
 MAX_DEPTH = 4
+TOKEN_NUMBER = 4
 
 DIFFICULTY = ['Easy','Normal','Hard']
 
