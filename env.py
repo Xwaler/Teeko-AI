@@ -9,6 +9,12 @@ class Token:
         self.pos = np.array(pos)
         self.player = player
 
+    def __str__(self):
+        return self.pos
+
+    def __repr__(self):
+        return self.player.__repr__()
+
     def move(self, direction):
         self.pos += direction
 
@@ -20,6 +26,8 @@ class Player:
         self.tokens = []
         self.has_played = False
 
+    def __repr__(self):
+        return self.idt.__repr__()
 
 class State:
     def __init__(self):
@@ -48,9 +56,11 @@ class State:
         for shift in SURROUNDING:
 
             if (0 <= token.pos[0] + shift[0] < 5 and 0 <= token.pos[1] + shift[1] < 5 and self.grid[token.pos[0] + shift[0]][
-                token.pos[1] + shift[1]] == self.grid[token.pos[0]][token.pos[1]]) or (
+                token.pos[1] + shift[1]] is not None and self.grid[token.pos[0] + shift[0]][
+                token.pos[1] + shift[1]].player.idt == self.grid[token.pos[0]][token.pos[1]].player.idt) or (
                     0 <= token.pos[0] - shift[0] < 5 and 0 <= token.pos[1] - shift[1] < 5 and self.grid[token.pos[0] - shift[0]][
-                token.pos[1] - shift[1]] == self.grid[token.pos[0]][token.pos[1]]):
+                token.pos[1] - shift[1]] is not None and self.grid[token.pos[0] - shift[0]][
+                token.pos[1] - shift[1]].player.idt == self.grid[token.pos[0]][token.pos[1]].player.idt):
                 directions.append(shift)
 
         return directions
@@ -70,14 +80,16 @@ class State:
                     currentLine = 1
 
                     while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
-                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] == player.idt:
+                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] is not None and\
+                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]].player.idt == player.idt:
                         currentLine = currentLine + 1
                         i = i + 1
 
                     i = -1
 
                     while 0 <= token.pos[0] + i * direction[0] < 5 and 0 <= token.pos[1] + i * direction[1] < 5 and \
-                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] == player.idt:
+                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]] is not None and \
+                            self.grid[token.pos[0] + i * direction[0]][token.pos[1] + i * direction[1]].player.idt == player.idt:
                         currentLine = currentLine + 1
                         i = i - 1
 
@@ -150,8 +162,13 @@ class State:
         return bool(longestAlignment >= 4)
 
     def get_score(self, player):
-        max_align = self.getAligned(player)
-        return max_align * (-1 if player.idt == 2 else 1)
+        # max_align = self.getAligned(player)
+        # return max_align * (-1 if player.idt == 2 else 1)
+
+        p1 = self.getAligned(self.players[0])
+        print("p1 : ", p1)
+        p2 = self.getAligned(self.players[1])
+        return p1 - p2
 
 
 class Teeko:
@@ -177,15 +194,27 @@ class Teeko:
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, move, current_state, depth, alpha, beta, maximizing_player, primary_player_idt):
+
+        print("depth : ", depth)
+
         new_state = deepcopy(current_state)
 
+        print("state : \n", new_state.grid)
+
         player = new_state.players[primary_player_idt - 1]
+
+        print("player : ", player.idt)
+
         other_player = new_state.players[abs(primary_player_idt - 2)]
+
+        print("move : ", move)
 
         if move[0] == 0:
             new_state.addToken(player, move[1])
         else:
             new_state.moveToken(new_state.grid[move[1][0]][move[1][1]], move[2])
+
+        print("state after move : \n", new_state.grid)
 
         if depth == 0 or new_state.over():
             return new_state.get_score(player)
@@ -195,6 +224,9 @@ class Teeko:
 
             for child_move in new_state.getAllMoves(player):
                 score = self.minMax(child_move, new_state, depth - 1, alpha, beta, False, primary_player_idt)
+
+                print("score : ", score)
+
                 max_score = np.max([max_score, score])
 
                 alpha = np.max([alpha, score])
@@ -207,6 +239,9 @@ class Teeko:
 
             for child_move in new_state.getAllMoves(other_player):
                 score = self.minMax(child_move, new_state, depth - 1, alpha, beta, True, primary_player_idt)
+
+                print("score : ", score)
+
                 min_score = np.min([min_score, score])
 
                 beta = np.min([beta, score])
@@ -220,11 +255,11 @@ class Teeko:
         if player.AI:
             possible_moves = self.state.getAllMoves(player)
             scores = np.empty(len(possible_moves))
+
+            print(self.state.grid)
+
             for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, self.state, 2,
-                                        np.max(scores) if player.idt == 1 else -np.inf,
-                                        np.min(scores) if player.idt == 2 else np.inf,
-                                        player.idt != 1, player.idt)
+                scores[i] = self.minMax(move, self.state, 3, -np.inf, np.inf, player.idt != 1, player.idt)
             print(player.idt, list(zip(possible_moves, scores)))
 
             if player.idt == 1:
