@@ -1,4 +1,5 @@
 import sys
+import threading
 from copy import deepcopy
 
 from tools import *
@@ -28,6 +29,7 @@ class Player:
 
     def __repr__(self):
         return self.idt.__repr__()
+
 
 class State:
     def __init__(self):
@@ -176,6 +178,7 @@ class Teeko:
         self.surf = surf
         self.state = State().__random_start__()
         self.turn_to = randomChoice(self.state.players)
+        self.minmax_thread = None
 
         self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
 
@@ -249,29 +252,34 @@ class Teeko:
                     break
             return min_score
 
+    def AI_handler(self, player):
+        possible_moves = self.state.getAllMoves(player)
+        scores = np.empty(len(possible_moves))
+
+        print(self.state.grid)
+
+        for i, move in enumerate(possible_moves):
+            scores[i] = self.minMax(move, self.state, 3, -np.inf, np.inf, player.idt != 1, player.idt)
+        print(player.idt, list(zip(possible_moves, scores)))
+
+        if player.idt == 1:
+            move = possible_moves[np.argmax(scores)]
+        else:
+            move = possible_moves[np.argmin(scores)]
+
+        if move[0] == 0:
+            self.state.addToken(player, move[1])
+        else:
+            self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
+        player.has_played = True
+
     def update(self):
         player = self.turn_to
 
         if player.AI:
-            possible_moves = self.state.getAllMoves(player)
-            scores = np.empty(len(possible_moves))
-
-            print(self.state.grid)
-
-            for i, move in enumerate(possible_moves):
-                scores[i] = self.minMax(move, self.state, 3, -np.inf, np.inf, player.idt != 1, player.idt)
-            print(player.idt, list(zip(possible_moves, scores)))
-
-            if player.idt == 1:
-                move = possible_moves[np.argmax(scores)]
-            else:
-                move = possible_moves[np.argmin(scores)]
-
-            if move[0] == 0:
-                self.state.addToken(player, move[1])
-            else:
-                self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
-            player.has_played = True
+            if not player.has_played:
+                self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
+                self.minmax_thread.start()
 
         else:
             # waits about a sec
