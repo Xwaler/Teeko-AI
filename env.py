@@ -1,6 +1,5 @@
 import sys
 import threading
-from copy import deepcopy
 
 from tools import *
 
@@ -175,8 +174,7 @@ class State:
             moves.extend(self.getPossibleMove(token))
 
         if len(player.tokens) < 4:
-            placement_move = [[0, pos.tolist(), [0, 0]] for pos in self.getAllEmpty()]
-            moves.extend(placement_move)
+            moves.extend([[0, pos.tolist(), [0, 0]] for pos in self.getAllEmpty()])
 
         return moves
 
@@ -236,7 +234,7 @@ class Teeko:
                               '< Back', BACKGROUND)
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
-    def minMax(self, move, depth, alpha, beta, maximizing_player, primary_player_idt):
+    def minMax(self, move, depth, alpha, beta, maximizing_player, player_id):
         if self.kill_thread:
             raise SystemExit()
 
@@ -244,107 +242,115 @@ class Teeko:
 
         print("state : \n", self.state.grid)
 
-        player = self.state.players[primary_player_idt - 1]
+        player = self.state.players[player_id - 1]
 
         print("player : ", player.idt)
 
-        other_player = self.state.players[abs(primary_player_idt - 2)]
-
         print("move : ", move)
 
-        if move[0] == 0:
-            self.state.addToken(player, move[1])
-        else:
-            self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
-
-        print("state after move : \n", self.state.grid)
-
-        if depth == 0 or self.state.over(player):
-
+        if move is not None:
             if move[0] == 0:
-                self.state.removeToken(player, move[1])
+                self.state.addToken(player, move[1])
             else:
-                self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]], [-move[2][0], -move[2][1]])
+                self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
 
-            return self.state.get_score(player)
+            print("state after move : \n", self.state.grid)
+
+            if depth == 0 or self.state.over(player):
+                if move[0] == 0:
+                    self.state.removeToken(player, move[1])
+                else:
+                    self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                                         [-move[2][0], -move[2][1]])
+
+                return self.state.get_score(player)
 
         if maximizing_player:
             max_score = -np.inf
+            best_move = None
 
             for child_move in self.state.getAllMoves(player):
-                score = self.minMax(child_move, depth - 1, alpha, beta, False, primary_player_idt)
+                score = self.minMax(child_move, depth - 1, alpha, beta, False, abs(player_id - 1))
 
                 print("score : ", score)
 
-                max_score = np.max([max_score, score])
+                if score > max_score:
+                    max_score = score
+                    best_move = child_move
 
                 alpha = np.max([alpha, score])
                 if beta <= alpha:
                     break
 
-            if move[0] == 0:
-                self.state.removeToken(player, move[1])
-            else:
-                self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]], [-move[2][0], -move[2][1]])
+            if move is not None:
+                if move[0] == 0:
+                    self.state.removeToken(player, move[1])
+                else:
+                    self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                                         [-move[2][0], -move[2][1]])
 
-            return max_score
+            print("state after reset : \n", self.state.grid)
+
+            if depth != MAX_DEPTH:
+                return max_score
+            else:
+                return best_move
 
         else:
             min_score = np.inf
+            best_move = None
 
-            for child_move in self.state.getAllMoves(other_player):
-                score = self.minMax(child_move, depth - 1, alpha, beta, True, primary_player_idt)
+            for child_move in self.state.getAllMoves(player):
+                score = self.minMax(child_move, depth - 1, alpha, beta, True, abs(player_id - 1))
 
                 print("score : ", score)
 
-                min_score = np.min([min_score, score])
+                if score < min_score:
+                    min_score = score
+                    best_move = child_move
 
                 beta = np.min([beta, score])
                 if beta <= alpha:
                     break
 
-            if move[0] == 0:
-                self.state.removeToken(player, move[1])
-            else:
-                self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]], [-move[2][0], -move[2][1]])
+            if move is not None:
+                if move[0] == 0:
+                    self.state.removeToken(player, move[1])
+                else:
+                    self.state.moveToken(self.state.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                                         [-move[2][0], -move[2][1]])
 
-            return min_score
+            if depth != MAX_DEPTH:
+                return min_score
+            else:
+                return best_move
 
     def AI_handler(self, player):
-        possible_moves = self.state.getAllMoves(player)
-        scores = np.empty(len(possible_moves))
-
-        print(self.state.grid)
-
-        for i, move in enumerate(possible_moves):
-            scores[i] = self.minMax(move, 2, -np.inf, np.inf, player.idt != 1, player.idt)
-        print(player.idt, list(zip(possible_moves, scores)))
-
-        if player.idt == 1:
-            move = possible_moves[np.argmax(scores)]
-        else:
-            move = possible_moves[np.argmin(scores)]
+        move = self.minMax(None, MAX_DEPTH, -np.inf, np.inf, player.idt == 1, player.idt)
+        print('Selected move : ', move)
 
         if move[0] == 0:
             self.state.addToken(player, move[1])
         else:
             self.state.moveToken(self.state.grid[move[1][0]][move[1][1]], move[2])
+
         player.has_played = True
+        self.minmax_thread = None
 
     def update(self):
         player = self.turn_to
 
-        if player.AI:
-            if not player.has_played:
+        if not player.has_played:
+            if player.AI and self.minmax_thread is None:
                 self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
                 self.minmax_thread.start()
 
-        else:
-            # waits about a sec
-            if np.random.random() < 1 / 60:
-                player.has_played = True
+            else:
+                # waits about a sec
+                if np.random.random() < 1 / 60:
+                    player.has_played = True
 
-        if player.has_played:
+        else:
             self.turn_to = self.state.players[abs(np.where(self.state.players == player)[0][0] - 1)]
             player.has_played = False
 
@@ -365,12 +371,14 @@ class Teeko:
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
-                pygame.draw.circle(self.surf, RED if self.state.grid[j][i] == 2 else BLACK, (
-                    (i * self.square_width + self.square_width // 2) + int(
-                        (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-                    j * self.square_width + self.square_width // 2 + int(
-                        (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
-                                   TOKEN_THICKNESS if self.state.grid[j][i] == 0 else 0)
+                pygame.draw.circle(self.surf,
+                                   RED if self.state.grid[j][i] is not None and self.state.grid[j][
+                                       i].player.idt == 2 else BLACK, (
+                                       (i * self.square_width + self.square_width // 2) + int(
+                                           (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                                       j * self.square_width + self.square_width // 2 + int(
+                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
+                                   TOKEN_THICKNESS if self.state.grid[j][i] is None else 0)
 
     def parse_event(self, event):
         pass
