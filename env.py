@@ -31,12 +31,12 @@ class TokenView:
         self.color = color
         pygame.draw.circle(self.surf, color, (self.x, self.y), TOKEN_RADIUS)
 
-    def placeToken(self,x,y):
+    def placeToken(self, x, y):
         self.x = x
         self.y = y
         pygame.draw.circle(self.surf, self.color, (self.x, self.y), TOKEN_RADIUS)
 
-    def on_token(self,pos):
+    def on_token(self, pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
             return True
         return False
@@ -54,6 +54,46 @@ class Player:
 
     def __repr__(self):
         return self.idt.__repr__()
+
+
+class PlayableZone:
+    def __init__(self, surf, x, y):
+        self.surf = surf
+        self.x = x
+        self.y = y
+
+    def draw(self):
+        pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS, TOKEN_THICKNESS)
+
+    def on_dropzone(self, pos):
+        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
+            return True
+        return False
+
+
+class Plate:
+    def __init__(self, surf, x, y, w, h, square_width):
+        self.surf = surf
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.playableZones = []
+        self.square_width = square_width
+
+        for j in range(GRID_SIZE):
+            for i in range(GRID_SIZE):
+                self.playableZones.append(
+                    PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
+                        (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                                 j * self.square_width + self.square_width // 2 + int(
+                                     (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)))
+
+    def drawPlate(self):
+        pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.h), 3)
+
+        for playableZone in self.playableZones:
+            playableZone.draw()
 
 
 class Teeko:
@@ -99,6 +139,9 @@ class Teeko:
         self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                               '< Back', BACKGROUND)
 
+        self.plate = Plate(surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
+                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2, self.square_width * GRID_SIZE,
+                           self.square_width * GRID_SIZE, self.square_width)
         self.token_dragging = False
         self.selectedtoken = None
         self.notremoved = True
@@ -220,85 +263,6 @@ class Teeko:
         # print("p2 : ", p2)
         return p1 - p2
 
-class PlayableZone:
-    def __init__(self, surf, x, y):
-        self.surf = surf
-        self.x = x
-        self.y = y
-
-    def draw(self):
-        pygame.draw.circle(self.surf,BLACK,(self.x,self.y), TOKEN_RADIUS, TOKEN_THICKNESS)
-
-    def on_dropzone(self,pos):
-        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
-            return True
-        return False
-
-class Plate:
-    def __init__(self,surf,x,y,w,h,square_width):
-        self.surf = surf
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.playableZones = []
-        self.square_width = square_width
-
-        for j in range(GRID_SIZE):
-            for i in range(GRID_SIZE):
-                self.playableZones.append(PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
-                    (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-                                                            j * self.square_width + self.square_width // 2 + int(
-                                                                (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)))
-
-    def drawPlate(self):
-        pygame.draw.rect(self.surf, BLACK,(self.x,self.y,self.w,self.h), 3)
-
-        for playableZone in self.playableZones:
-            playableZone.draw()
-
-
-
-class Teeko:
-    def __init__(self, surf):
-        self.surf = surf
-
-        self.playerstokens = []
-        self.end_last_turn = 0
-        self.playerscolors = []
-
-        self.minmax_thread = None
-        self.kill_thread = False
-
-        self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
-
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
-        self.playerone = self.font.render('Player 1', True, BLACK)
-        self.playeronerect = self.playerone.get_rect()
-        self.playeronerect.center = (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4), 150)
-
-        self.playertwo = self.font.render('Player 2', True, BLACK)
-        self.playertworect = self.playertwo.get_rect()
-        self.playertworect.center = (
-            int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
-
-        for k in range(0, 2):
-            for l in range(0, 4):
-                self.playerstokens.append((k, l, True, TokenView(self.surf, (
-                        int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
-                        k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2))), l * (TOKEN_RADIUS * 2 + 30) + 250)))
-
-
-        self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
-                              '< Back', BACKGROUND)
-
-        self.plate = Plate(surf,(SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,self.square_width * GRID_SIZE, self.square_width * GRID_SIZE, self.square_width)
-        self.token_dragging = False
-        self.selectedtoken = None
-        self.notremoved = True
-        self.offset_Y = 0
-        self.offset_X = 0
-
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, move, depth, alpha, beta, maximizing_player, player_id):
         if self.kill_thread:
@@ -399,8 +363,7 @@ class Teeko:
                 return randomChoice(min_score_moves)
 
     def AI_handler(self, player):
-        move = self.minMax(None, MAX_DEPTH[self.indexdifficulty],
-                           -np.inf, np.inf, player.idt == 1, player.idt)
+        move = self.minMax(None, MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf, player.idt == 1, player.idt)
         # print('Selected move : ', move)
 
         if move[0] == 0:
@@ -486,7 +449,7 @@ class Teeko:
         if event.type == pygame.MOUSEBUTTONUP:
             for dropZone in self.plate.playableZones:
                 if dropZone.on_dropzone(pos):
-                    self.selectedtoken[3].placeToken(dropZone.x,dropZone.y)
+                    self.selectedtoken[3].placeToken(dropZone.x, dropZone.y)
                 elif self.selectedtoken is not None:
                     self.selectedtoken[3].placeToken(self.selectedtoken[3].x, self.selectedtoken[3].y)
                 self.token_dragging = False
