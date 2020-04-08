@@ -262,8 +262,6 @@ class Plate:
 class Teeko:
     def __init__(self, surf):
         self.surf = surf
-        self.state = State().__random_start__()
-        self.turn_to = randomChoice(self.state.players)
 
         self.playerstokens = []
         self.end_last_turn = 0
@@ -416,8 +414,7 @@ class Teeko:
 
     def update(self):
         if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
-            player = self.turn_to
-
+            player = Player(1)
             if not player.has_played:
                 if player.AI and self.minmax_thread is None:
                     self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
