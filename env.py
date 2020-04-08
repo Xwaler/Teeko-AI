@@ -289,7 +289,7 @@ class Teeko:
             for child_move in self.getAllMoves(player):
                 score = self.minMax(child_move, depth - 1, alpha, beta, True, abs(player_id - 1))
 
-                print("score : ", score)
+                # print("score : ", score)
 
                 if score < min_score:
                     min_score = score
@@ -366,28 +366,28 @@ class Teeko:
             elif Tokens[0] == 1 and Tokens[2]:
                 Tokens[3].render(self.playerscolors[1])
 
-        for j in range(GRID_SIZE):
-            for i in range(GRID_SIZE):
-                pygame.draw.circle(self.surf,
-                                   self.playerscolors[1] if self.grid[j][i] is not None and (
-                                           self.grid[j][i].player.idt == 2) else self.playerscolors[0] if (
-                                           self.grid[j][i] is not None and self.grid[j][i].player.idt == 1) else BLACK,
-                                   (
-                                       (i * self.square_width + self.square_width // 2) + int(
-                                           (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-                                       j * self.square_width + self.square_width // 2 + int(
-                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
-                                   TOKEN_THICKNESS if self.grid[j][i] is None else 0)
-
         # for j in range(GRID_SIZE):
         #     for i in range(GRID_SIZE):
         #         pygame.draw.circle(self.surf,
-        #                            BLACK, (
+        #                            self.playerscolors[1] if self.grid[j][i] is not None and (
+        #                                    self.grid[j][i].player.idt == 2) else self.playerscolors[0] if (
+        #                                    self.grid[j][i] is not None and self.grid[j][i].player.idt == 1) else BLACK,
+        #                            (
         #                                (i * self.square_width + self.square_width // 2) + int(
         #                                    (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
         #                                j * self.square_width + self.square_width // 2 + int(
         #                                    (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
-        #                            TOKEN_THICKNESS)
+        #                            TOKEN_THICKNESS if self.grid[j][i] is None else 0)
+
+        for j in range(GRID_SIZE):
+            for i in range(GRID_SIZE):
+                pygame.draw.circle(self.surf,
+                                   BLACK, (
+                                       (i * self.square_width + self.square_width // 2) + int(
+                                           (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                                       j * self.square_width + self.square_width // 2 + int(
+                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
+                                   TOKEN_THICKNESS)
 
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()
