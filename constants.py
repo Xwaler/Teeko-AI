@@ -7,7 +7,7 @@ DIFFICULTY = ['Easy', 'Normal', 'Hard']
 MAX_DEPTH = [3, 4, 5]
 
 SCREEN_SIZE = (1200, 800)
-TOKEN_RADIUS = 45
+TOKEN_RADIUS = 40
 TOKEN_THICKNESS = 2
 
 BLACK = (0, 0, 0)

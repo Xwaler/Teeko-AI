@@ -67,7 +67,7 @@ class PlayableZone:
         self.y = y
 
     def draw(self):
-        pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS, TOKEN_THICKNESS)
+        pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS+5, TOKEN_THICKNESS)
 
     def on_dropzone(self, pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
