@@ -33,6 +33,11 @@ class TokenView:
         self.color = color
         pygame.draw.circle(self.surf,color, (self.x, self.y), TOKEN_RADIUS)
 
+    def placeToken(self,x,y):
+        self.x = x
+        self.y = y
+        pygame.draw.circle(self.surf, self.color, (self.x, self.y), TOKEN_RADIUS)
+
     def on_token(self,pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
             return True
@@ -226,6 +231,44 @@ class State:
         #print("p2 : ", p2)
         return p1 - p2
 
+class PlayableZone:
+    def __init__(self, surf, x, y):
+        self.surf = surf
+        self.x = x
+        self.y = y
+
+    def draw(self):
+        pygame.draw.circle(self.surf,BLACK,(self.x,self.y), TOKEN_RADIUS, TOKEN_THICKNESS)
+
+    def on_dropzone(self,pos):
+        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
+            return True
+        return False
+
+class Plate:
+    def __init__(self,surf,x,y,w,h,square_width):
+        self.surf = surf
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.playableZones = []
+        self.square_width = square_width
+
+        for j in range(GRID_SIZE):
+            for i in range(GRID_SIZE):
+                self.playableZones.append(PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
+                    (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                                                            j * self.square_width + self.square_width // 2 + int(
+                                                                (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)))
+
+    def drawPlate(self):
+        pygame.draw.rect(self.surf, BLACK,(self.x,self.y,self.w,self.h), 3)
+
+        for playableZone in self.playableZones:
+            playableZone.draw()
+
+
 
 class Teeko:
     def __init__(self, surf):
@@ -262,6 +305,7 @@ class Teeko:
         self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                               '< Back', BACKGROUND)
 
+        self.plate = Plate(surf,(SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,self.square_width * GRID_SIZE, self.square_width * GRID_SIZE, self.square_width)
         self.token_dragging = False
         self.selectedtoken = None
         self.notremoved = True
@@ -403,9 +447,7 @@ class Teeko:
         else:
             self.backbtn.drawRect(self.surf)
 
-        pygame.draw.rect(self.surf, BLACK, (
-            (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2, (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
-            self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
+        self.plate.drawPlate()
 
         for Tokens in self.playerstokens:
             if Tokens[0] == 0 and Tokens[2]:
@@ -413,14 +455,6 @@ class Teeko:
             elif Tokens[0] == 1 and Tokens[2]:
                 Tokens[3].drawToken(self.playerscolors[1])
 
-        for j in range(GRID_SIZE):
-            for i in range(GRID_SIZE):
-                pygame.draw.circle(self.surf,
-                                   BLACK, (
-                                       (i * self.square_width + self.square_width // 2) + int(
-                                           (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-                                       j * self.square_width + self.square_width // 2 + int(
-                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS, TOKEN_THICKNESS)
 
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()
@@ -436,8 +470,13 @@ class Teeko:
                     self.token_dragging = True
 
         if event.type == pygame.MOUSEBUTTONUP:
-            self.token_dragging = False
-            self.notremoved = True
+            for dropZone in self.plate.playableZones:
+                if dropZone.on_dropzone(pos):
+                    self.selectedtoken[3].placeToken(dropZone.x,dropZone.y)
+                elif self.selectedtoken is not None:
+                    self.selectedtoken[3].placeToken(self.selectedtoken[3].x, self.selectedtoken[3].y)
+                self.token_dragging = False
+                self.notremoved = True
 
         if event.type == pygame.MOUSEMOTION:
             if self.token_dragging:
