@@ -24,14 +24,17 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 pygame.quit()
-                if game.minmax_thread is not None and game.minmax_thread.isAlive():
+                if game.minmax_thread is not None:
                     game.kill_thread = True
+                    while game.minmax_thread.isAlive():
+                        continue
                 quit()
 
             code = page_manager.current.parse_event(event)
 
             if code == CODE_TO_GAME:
                 game.playerscolors = [COLORS[menu.INDEXCOLORONE], COLORS[menu.INDEXCOLORTWO]]
+                game.indexdifficulty = menu.indexdifficulty
                 page_manager.current = game
             elif code == CODE_TO_MENU:
                 page_manager.current = menu

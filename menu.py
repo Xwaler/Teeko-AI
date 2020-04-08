@@ -53,8 +53,9 @@ class Menu:
 
         self.startbtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 220, 200, 50, 'Start',
                                BACKGROUND)
-        self.settingsbtn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50, 'AI  Difficulty : ' + DIFFICULTY[self.indexdifficulty],
-                               BACKGROUND)
+        self.settingsbtn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50,
+                                  'AI  Difficulty : ' + DIFFICULTY[self.indexdifficulty],
+                                  BACKGROUND)
         self.leavebtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 290, 200, 50, 'Leave',
                                BACKGROUND)
 
@@ -63,12 +64,11 @@ class Menu:
             pos = pygame.mouse.get_pos()
 
             if self.startbtn.on_button(pos):
-
                 return CODE_TO_GAME
 
             if self.settingsbtn.on_button(pos):
                 if self.indexdifficulty < 2:
-                    self.indexdifficulty +=1
+                    self.indexdifficulty += 1
                 else:
                     self.indexdifficulty = 0
 

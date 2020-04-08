@@ -1,10 +1,10 @@
 GRID_SIZE = 5
 DIRECTIONS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 SURROUNDING = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
-MAX_DEPTH = 4
 TOKEN_NUMBER = 4
 
-DIFFICULTY = ['Easy','Normal','Hard']
+DIFFICULTY = ['Easy', 'Normal', 'Hard']
+MAX_DEPTH = [3, 4, 5]
 
 SCREEN_SIZE = (1200, 800)
 TOKEN_RADIUS = 45
