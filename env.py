@@ -27,6 +27,7 @@ class TokenView:
         self.surf = surf
         self.x = x
         self.y = y
+        self.color = None
 
     def drawToken(self,color):
         self.color = color
@@ -252,10 +253,8 @@ class Teeko:
             int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
 
         for k in range(0, 2):
-            print(k)
             for l in range(0, 4):
-                print(l)
-                self.playerstokens.append((k, TokenView(self.surf, (
+                self.playerstokens.append((k, l, True, TokenView(self.surf, (
                         int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
                         k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2))), l * (TOKEN_RADIUS * 2 + 30) + 250)))
 
@@ -264,6 +263,8 @@ class Teeko:
                               '< Back', BACKGROUND)
 
         self.token_dragging = False
+        self.selectedtoken = None
+        self.notremoved = True
         self.offset_Y = 0
         self.offset_X = 0
 
@@ -407,21 +408,19 @@ class Teeko:
             self.square_width * GRID_SIZE, self.square_width * GRID_SIZE), 3)
 
         for Tokens in self.playerstokens:
-            if Tokens[0] == 0:
-                Tokens[1].drawToken(self.playerscolors[0])
-            else:
-                Tokens[1].drawToken(self.playerscolors[1])
+            if Tokens[0] == 0 and Tokens[2]:
+                Tokens[3].drawToken(self.playerscolors[0])
+            elif Tokens[0] == 1 and Tokens[2]:
+                Tokens[3].drawToken(self.playerscolors[1])
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 pygame.draw.circle(self.surf,
-                                   self.playerscolors[1] if self.state.grid[j][i] is not None and self.state.grid[j][
-                                       i].player.idt == 2 else self.playerscolors[0] if self.state.grid[j][i] is not None and self.state.grid[j][
-                                       i].player.idt == 1 else BLACK, (
+                                   BLACK, (
                                        (i * self.square_width + self.square_width // 2) + int(
                                            (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
                                        j * self.square_width + self.square_width // 2 + int(
-                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS, TOKEN_THICKNESS if self.state.grid[j][i] is None else 0)
+                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS, TOKEN_THICKNESS)
 
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()
@@ -430,19 +429,26 @@ class Teeko:
                 return CODE_TO_MENU
 
             for TokenView in self.playerstokens:
-                if TokenView[1].on_token(pos):
-                    self.offset_X = TokenView[1].x - pos[0]
-                    self.offset_Y = TokenView[1].y - pos[1]
+                if TokenView[3].on_token(pos):
+                    self.selectedtoken = TokenView
+                    self.offset_X = TokenView[3].x - pos[0]
+                    self.offset_Y = TokenView[3].y - pos[1]
                     self.token_dragging = True
 
         if event.type == pygame.MOUSEBUTTONUP:
             self.token_dragging = False
+            self.notremoved = True
+
         if event.type == pygame.MOUSEMOTION:
-            for TokenView in self.playerstokens:
-                if self.token_dragging:
-                    newX = self.offset_X + pos[0]
-                    newY = self.offset_Y + pos[1]
-                    TokenView[1].drag((newX,newY))
+            if self.token_dragging:
+                if self.notremoved:
+                    self.notremoved = False
+                    index = self.playerstokens.index(self.selectedtoken)
+                    self.playerstokens.pop(index)
+                    self.playerstokens.insert(index,(self.selectedtoken[0],self.selectedtoken[1],False,self.selectedtoken[3]))
+                newX = self.offset_X + pos[0]
+                newY = self.offset_Y + pos[1]
+                self.selectedtoken[3].drag((newX,newY))
 
 
 
