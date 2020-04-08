@@ -38,6 +38,12 @@ class TokenView:
             return True
         return False
 
+    def placeToken(self, pos):
+        self.x = pos[0]
+        self.y = pos[1]
+        self.initialx = pos[0]
+        self.initialy = pos[1]
+
     def drag(self, pos):
         self.x = pos[0]
         self.y = pos[1]
@@ -70,12 +76,11 @@ class PlayableZone:
 
 
 class Plate:
-    def __init__(self, surf, x, y, w, h, square_width):
+    def __init__(self, surf, x, y, w, square_width):
         self.surf = surf
         self.x = x
         self.y = y
         self.w = w
-        self.h = h
         self.playableZones = []
         self.square_width = square_width
 
@@ -83,12 +88,12 @@ class Plate:
             for i in range(GRID_SIZE):
                 self.playableZones.append(
                     PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
-                        (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
+                        (SCREEN_SIZE[0] - self.w) / 2),
                                  j * self.square_width + self.square_width // 2 + int(
-                                     (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)))
+                                     (SCREEN_SIZE[1] - self.w) / 2)))
 
     def drawPlate(self):
-        pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.h), 3)
+        pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w,self.w), 3)
 
         for playableZone in self.playableZones:
             playableZone.draw()
@@ -138,10 +143,9 @@ class Teeko:
                               '< Back', BACKGROUND)
 
         self.plate = Plate(surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
-                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2, self.square_width * GRID_SIZE,
-                           self.square_width * GRID_SIZE, self.square_width)
+                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2, self.square_width * GRID_SIZE, self.square_width)
         self.token_dragging = False
-        self.selectedtoken = None
+        self.selectedtoken = TokenView(self.surf, 0, 0)
         self.offset_Y = 0
         self.offset_X = 0
 
@@ -420,16 +424,6 @@ class Teeko:
         #                                    (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
         #                            TOKEN_THICKNESS if self.grid[j][i] is None else 0)
 
-        for j in range(GRID_SIZE):
-            for i in range(GRID_SIZE):
-                pygame.draw.circle(self.surf,
-                                   BLACK, (
-                                       (i * self.square_width + self.square_width // 2) + int(
-                                           (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-                                       j * self.square_width + self.square_width // 2 + int(
-                                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
-                                   TOKEN_THICKNESS)
-
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -438,25 +432,25 @@ class Teeko:
 
             for TokenView in self.playerstokens:
                 if TokenView[2].on_token(pos):
-                    self.selectedtoken = TokenView
+                    self.selectedtoken = TokenView[2]
                     self.offset_X = TokenView[2].x - pos[0]
                     self.offset_Y = TokenView[2].y - pos[1]
                     self.token_dragging = True
 
         if event.type == pygame.MOUSEBUTTONUP:
             for dropZone in self.plate.playableZones:
-                if self.token_dragging:
-                    if dropZone.on_dropzone(pos):
-                        self.selectedtoken[2].drag((dropZone.x, dropZone.y))
-                    else:
-                        self.selectedtoken[2].drag((self.selectedtoken[2].initialx, self.selectedtoken[2].initialy))
-                    self.token_dragging = False
+                if dropZone.on_dropzone(pos):
+                    self.selectedtoken.placeToken((dropZone.x, dropZone.y))
+                else:
+                    print("out")
+                    self.selectedtoken.placeToken((self.selectedtoken.initialx, self.selectedtoken.initialy))
+                self.token_dragging = False
 
         if event.type == pygame.MOUSEMOTION:
             if self.token_dragging:
                 newX = self.offset_X + pos[0]
                 newY = self.offset_Y + pos[1]
-                self.selectedtoken[2].drag((newX, newY))
+                self.selectedtoken.drag((newX, newY))
 
     def print(self):
         print(self.grid)
