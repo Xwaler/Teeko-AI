@@ -150,6 +150,8 @@ class Teeko:
         self.offset_Y = 0
         self.offset_X = 0
 
+        self.i = 1
+
     def getAligned(self, player):
         longestLine = 1
 
@@ -368,8 +370,11 @@ class Teeko:
                 if dropZones.abscisse == move[1][1] and dropZones.ordonne == move[1][0]:
                     dropZones.available = False
                     for Tokens in AIToken:
-                        if Tokens[2].initialx != dropZones.x and Tokens[2].initialy != dropZones.y:
+                        if Tokens[1] == self.i:
                             Tokens[2].placeToken((dropZones.x,dropZones.y))
+                            self.i += 1
+                            break
+
         else:
             self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
 
