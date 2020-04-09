@@ -412,9 +412,9 @@ class Teeko:
         self.plate.drawPlate()
 
         for Tokens in self.playerstokens:
-            if Tokens[0] == 0:
+            if Tokens[0] == 1:
                 Tokens[2].render(self.playerscolors[0])
-            elif Tokens[0] == 1:
+            elif Tokens[0] == 2:
                 Tokens[2].render(self.playerscolors[1])
 
     # for j in range(GRID_SIZE):
