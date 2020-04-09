@@ -360,20 +360,18 @@ class Teeko:
                 return randomChoice(min_score_moves)
 
     def AI_handler(self, player):
+        print(self.grid)
         move = self.minMax(None, MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf, player.idt == 1, player.idt)
         # print('Selected move : ', move)
         AIToken = [token for token in self.playerstokens if token[0] == player.idt]
-        # TODO: update TokenView ???
+
         if move[0] == 0:
             self.addToken(player, move[1])
             for dropZones in self.plate.playableZones:
                 if dropZones.abscisse == move[1][1] and dropZones.ordonne == move[1][0]:
                     dropZones.available = False
-                    for Tokens in AIToken:
-                        if Tokens[1] == self.i:
-                            Tokens[2].placeToken((dropZones.x,dropZones.y))
-                            self.i += 1
-                            break
+                    AIToken[len(player.tokens) - 1][2].placeToken((dropZones.x, dropZones.y))
+                    break
 
         else:
             self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
@@ -383,7 +381,7 @@ class Teeko:
         player.has_played = True
 
     def update(self):
-        print(self.turn_to, self.turn_to.AI)
+        # print(self.turn_to, self.turn_to.AI)
 
         if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
             if self.over(self.players[1]):
