@@ -360,14 +360,16 @@ class Teeko:
     def AI_handler(self, player):
         move = self.minMax(None, MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf, player.idt == 1, player.idt)
         # print('Selected move : ', move)
-
+        AIToken = [token for token in self.playerstokens if token[0] == player.idt]
         # TODO: update TokenView ???
         if move[0] == 0:
             self.addToken(player, move[1])
             for dropZones in self.plate.playableZones:
                 if dropZones.abscisse == move[1][1] and dropZones.ordonne == move[1][0]:
                     dropZones.available = False
-                    
+                    for Tokens in AIToken:
+                        if Tokens[2].initialx != dropZones.x and Tokens[2].initialy != dropZones.y:
+                            Tokens[2].placeToken((dropZones.x,dropZones.y))
         else:
             self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
 
