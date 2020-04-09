@@ -386,9 +386,9 @@ class Teeko:
                     self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
                     self.minmax_thread.start()
 
-                else:
-                    # TODO: allow human player to move his tokens
-                    player.has_played = True  # TODO: move that to parse_event, somewhere
+                # else:
+                #     # TODO: allow human player to move his tokens
+                #     player.has_played = True  # TODO: move that to parse_event, somewhere
 
             else:
                 self.turn_to = self.players[abs(np.where(self.players == player)[0][0] - 1)]
