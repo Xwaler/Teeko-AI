@@ -56,10 +56,12 @@ class Player:
 
 
 class PlayableZone:
-    def __init__(self, surf, x, y):
+    def __init__(self, surf, x, y,i,j):
         self.surf = surf
         self.x = x
         self.y = y
+        self.abscisse = i
+        self.ordonne = j
         self.available = True
 
     def draw(self):
@@ -89,7 +91,7 @@ class Plate:
                     PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
                         (SCREEN_SIZE[0] - self.w) / 2),
                                  j * self.square_width + self.square_width // 2 + int(
-                                     (SCREEN_SIZE[1] - self.w) / 2)))
+                                     (SCREEN_SIZE[1] - self.w) / 2),i,j))
 
     def drawPlate(self):
         pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.w), 3)
