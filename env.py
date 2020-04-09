@@ -433,7 +433,7 @@ class Teeko:
                 return CODE_TO_MENU
 
             for TokenView in self.playerstokens:
-                if TokenView[2].on_token(pos) and not TokenView[3]:
+                if TokenView[2].on_token(pos) and not TokenView[3] and self.turn_to.i == TokenView[1]:
                     self.selectedtoken = TokenView[2]
                     self.offset_X = TokenView[2].x - pos[0]
                     self.offset_Y = TokenView[2].y - pos[1]
