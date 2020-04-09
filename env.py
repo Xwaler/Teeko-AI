@@ -137,7 +137,7 @@ class Teeko:
                                 k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
                                                                          self.square_width * GRID_SIZE) / 2))),
                         m * (TOKEN_RADIUS * 2 + 30) + 250
-                    ), self.players[k].AI is not True)
+                    ), self.players[k].AI)
                 )
 
         self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
