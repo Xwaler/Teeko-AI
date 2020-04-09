@@ -11,7 +11,7 @@ class Token:
         self.player = player
 
     def __str__(self):
-        return self.pos
+        return self.pos.__str__()
 
     def __repr__(self):
         return self.player.__repr__()
@@ -150,7 +150,9 @@ class Teeko:
         self.offset_Y = 0
         self.offset_X = 0
 
-        self.i = 1
+    def won(self):
+        print('Game finished.\n', self.grid)
+        raise SystemExit()
 
     def getAligned(self, player):
         longestLine = 1
@@ -165,24 +167,28 @@ class Teeko:
                     newline = token.pos[0] + direction[0]
                     newcolumn = token.pos[1] + direction[1]
 
-                    while (0 <= newline < 5 and 0 <= newcolumn < 5 and self.grid[newline][newcolumn] is not None and
-                           self.grid[newline][newcolumn].player.idt == self.grid[token.pos[0]][
-                               token.pos[1]].player.idt):
-                        newline = newline + direction[0]
-                        newcolumn = newcolumn + direction[1]
+                    try:
+                        while (0 <= newline < 5 and 0 <= newcolumn < 5 and self.grid[newline][newcolumn] is not None and
+                               self.grid[newline][newcolumn].player.idt == self.grid[token.pos[0]][
+                                   token.pos[1]].player.idt):
+                            newline = newline + direction[0]
+                            newcolumn = newcolumn + direction[1]
 
-                        currentAlignment += 1
+                            currentAlignment += 1
 
-                    newline = token.pos[0] - direction[0]
-                    newcolumn = token.pos[1] - direction[1]
+                        newline = token.pos[0] - direction[0]
+                        newcolumn = token.pos[1] - direction[1]
 
-                    while (0 <= newline < 5 and 0 <= newcolumn < 5 and self.grid[newline][newcolumn] is not None and
-                           self.grid[newline][newcolumn].player.idt == self.grid[token.pos[0]][
-                               token.pos[1]].player.idt):
-                        newline = newline - direction[0]
-                        newcolumn = newcolumn - direction[1]
+                        while (0 <= newline < 5 and 0 <= newcolumn < 5 and self.grid[newline][newcolumn] is not None and
+                               self.grid[newline][newcolumn].player.idt == self.grid[token.pos[0]][
+                                   token.pos[1]].player.idt):
+                            newline = newline - direction[0]
+                            newcolumn = newcolumn - direction[1]
 
-                        currentAlignment += 1
+                            currentAlignment += 1
+                    except AttributeError:
+                        print(self.grid, player.idt, token, [token.pos for token in player.tokens])
+                        quit()
 
                     if currentAlignment > longestLine:
                         longestLine = currentAlignment
@@ -245,24 +251,28 @@ class Teeko:
                     positions.append([j, i])
         return positions
 
-    def over(self, player):
-        return self.getAligned(player) >= 4
+    def over(self):
+        longestAlignment = 1
+        for player in self.players:
+            playerLongestAlignment = self.getAligned(player)
+            if playerLongestAlignment > longestAlignment:
+                longestAlignment = playerLongestAlignment
+        return longestAlignment >= 4
 
     def get_score(self):
         p1 = self.getAligned(self.players[0])
         # print("p1 : ", p1)
         p2 = self.getAligned(self.players[1])
         # print("p2 : ", p2)
-        return p1 - p2
+        return (p1 * abs(p1)) - (p2 * abs(p2))
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
-    def minMax(self, move, depth, alpha, beta, maximizing_player, player_id):
+    def minMax(self, depth, alpha, beta, maximizing_player, player_id):
         if self.kill_thread:
             raise SystemExit()
 
         DEPTH_IS_ZERO = depth == 0
         DEPTH_IS_MAX = depth == MAX_DEPTH[self.indexdifficulty]
-        PLACEMENT = move is not None and move[0] == 0
 
         # print("\n\ndepth : ", depth)
 
@@ -274,61 +284,63 @@ class Teeko:
 
         # print("move : ", move)
 
-        if move is not None:
-            if PLACEMENT:
-                self.addToken(player, move[1])
-            else:
-                self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
-
-            # print("state after move : \n", self.grid)
-
-            if DEPTH_IS_ZERO or self.over(player):
-                score = self.get_score()
-                if PLACEMENT:
-                    self.removeToken(player, move[1])
-                else:
-                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                                   [-move[2][0], -move[2][1]])
-                return score
+        if DEPTH_IS_ZERO or self.over():
+            return self.get_score()
 
         if maximizing_player:
             max_score = -np.inf
             max_score_moves = []
 
-            for child_move in self.getAllMoves(player):
-                score = self.minMax(child_move, depth - 1, alpha, beta, False, abs(player_id - 1))
+            for move in self.getAllMoves(player):
+                if move[0] == 0:
+                    self.addToken(player, move[1])
+                else:
+                    self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
 
+                score = self.minMax(depth - 1, alpha, beta, False, abs(player_id - 1))
                 # print("score : ", score)
+
+                if move[0] == 0:
+                    self.removeToken(player, move[1])
+                else:
+                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                                   [-move[2][0], -move[2][1]])
 
                 if score > max_score:
                     max_score = score
                     max_score_moves = []
 
                 if DEPTH_IS_MAX and score == max_score:
-                    max_score_moves.append(child_move)
+                    max_score_moves.append(move)
 
                 alpha = np.max([alpha, score])
                 if beta <= alpha:
                     break
 
-            if PLACEMENT:
-                self.removeToken(player, move[1])
-            elif move is not None:
-                self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                               [-move[2][0], -move[2][1]])
-
             if not DEPTH_IS_MAX:
                 return max_score
             else:
+                print('Max\n', max_score_moves)
                 return max_score, randomChoice(max_score_moves)
 
         else:
             min_score = np.inf
             min_score_moves = []
 
-            for child_move in self.getAllMoves(player):
-                score = self.minMax(child_move, depth - 1, alpha, beta, True, abs(player_id - 1))
+            for move in self.getAllMoves(player):
+                if move[0] == 0:
+                    self.addToken(player, move[1])
+                else:
+                    self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
 
+                score = self.minMax(depth - 1, alpha, beta, True, abs(player_id - 1))
+                # print("score : ", score)
+
+                if move[0] == 0:
+                    self.removeToken(player, move[1])
+                else:
+                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                                   [-move[2][0], -move[2][1]])
                 # print("score : ", score)
 
                 if score < min_score:
@@ -336,27 +348,21 @@ class Teeko:
                     min_score_moves = []
 
                 if DEPTH_IS_MAX and score == min_score:
-                    min_score_moves.append(child_move)
+                    min_score_moves.append(move)
 
                 beta = np.min([beta, score])
                 if beta <= alpha:
                     break
 
-            if PLACEMENT:
-                self.removeToken(player, move[1])
-            elif move is not None:
-                self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                               [-move[2][0], -move[2][1]])
-
             if not DEPTH_IS_MAX:
                 return min_score
             else:
+                print('Min\n', min_score_moves)
                 return min_score, randomChoice(min_score_moves)
 
     def AI_handler(self, player):
         print(self.grid)
-        score, move = self.minMax(None, MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf,
-                                  player.idt == 1, player.idt - 1)
+        score, move = self.minMax(MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf, player.idt == 1, player.idt - 1)
         print('Score : ', score, ' | Selected move : ', move)
         AIToken = [token for token in self.playerstokens if token[0] == player.idt]
 
@@ -394,7 +400,6 @@ class Teeko:
 
     def update(self):
         # print(self.turn_to, self.turn_to.AI)
-
         if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
             player = self.turn_to
             if not player.has_played:
@@ -402,6 +407,9 @@ class Teeko:
                     self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
                     self.minmax_thread.start()
             else:
+                if self.over():
+                    self.won()
+
                 self.turn_to = self.players[abs(np.where(self.players == player)[0][0] - 1)]
                 player.has_played = False
 
@@ -423,19 +431,6 @@ class Teeko:
                 Tokens[2].render(self.playerscolors[0])
             elif Tokens[0] == 2:
                 Tokens[2].render(self.playerscolors[1])
-
-    # for j in range(GRID_SIZE):
-    #     for i in range(GRID_SIZE):
-    #         pygame.draw.circle(self.surf,
-    #                            self.playerscolors[1] if self.grid[j][i] is not None and (
-    #                                    self.grid[j][i].player.idt == 2) else self.playerscolors[0] if (
-    #                                    self.grid[j][i] is not None and self.grid[j][i].player.idt == 1) else BLACK,
-    #                            (
-    #                                (i * self.square_width + self.square_width // 2) + int(
-    #                                    (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2),
-    #                                j * self.square_width + self.square_width // 2 + int(
-    #                                    (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2)), TOKEN_RADIUS,
-    #                            TOKEN_THICKNESS if self.grid[j][i] is None else 0)
 
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()
