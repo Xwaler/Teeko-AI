@@ -364,6 +364,10 @@ class Teeko:
         # TODO: update TokenView ???
         if move[0] == 0:
             self.addToken(player, move[1])
+            for dropZones in self.plate.playableZones:
+                if dropZones.abscisse == move[1][1] and dropZones.ordonne == move[1][0]:
+                    dropZones.available = False
+                    
         else:
             self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
 
@@ -448,7 +452,7 @@ class Teeko:
                     if dropZone.on_dropzone(pos) and dropZone.isAvailable():
                         dropZone.available = False
                         self.selectedtoken.placeToken((dropZone.x, dropZone.y))
-                        self.addToken(self.turn_to, (dropZone.abscisse, dropZone.ordonne))
+                        self.addToken(self.turn_to, (dropZone.ordonne, dropZone.abscisse))
                         # TODO: update grid and token objects ???
                         self.selectedtoken = None
                         self.turn_to.has_played = True
