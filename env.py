@@ -372,7 +372,16 @@ class Teeko:
                     break
 
         else:
-            self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
+            for dropZones in self.plate.playableZones:
+                if dropZones.abscisse == move[1][1] and dropZones.ordonne == move[1][0]:
+                    dropZones.available = True
+                    for Tokens in AIToken:
+                        if Tokens[2].initialx == dropZones.x and Tokens[2].initialy == dropZones.y:
+                            self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
+                            for dropZones in self.plate.playableZones:
+                                if dropZones.abscisse == move[1][1] + move[2][1] and dropZones.ordonne == move[1][0] + move[2][0]:
+                                    Tokens[2].placeToken((dropZones.x,dropZones.y))
+
 
         self.end_last_turn = time.time()
         self.minmax_thread = None
