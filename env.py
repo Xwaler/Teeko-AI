@@ -202,7 +202,6 @@ class Teeko:
         player.tokens.append(token)
 
     def removeToken(self, player, pos):
-
         self.grid[pos[0]][pos[1]] = None
 
         for token in player.tokens:
@@ -231,14 +230,11 @@ class Teeko:
 
     def getAllMoves(self, player):
         moves = []
-
         if len(player.tokens) < 4:
             moves.extend([[0, pos, [0, 0]] for pos in self.getAllEmpty()])
-
         else:
             for token in player.tokens:
                 moves.extend(self.getPossibleMove(token))
-
         return moves
 
     def getAllEmpty(self):
@@ -272,7 +268,7 @@ class Teeko:
 
         # print("state : \n", self.grid)
 
-        player = self.players[player_id - 1]
+        player = self.players[player_id]
 
         # print("player : ", player.idt)
 
@@ -304,7 +300,7 @@ class Teeko:
 
                 # print("score : ", score)
 
-                if score >= max_score:
+                if score > max_score:
                     max_score = score
                     max_score_moves = []
 
@@ -324,7 +320,7 @@ class Teeko:
             if not DEPTH_IS_MAX:
                 return max_score
             else:
-                return randomChoice(max_score_moves)
+                return max_score, randomChoice(max_score_moves)
 
         else:
             min_score = np.inf
@@ -355,12 +351,13 @@ class Teeko:
             if not DEPTH_IS_MAX:
                 return min_score
             else:
-                return randomChoice(min_score_moves)
+                return min_score, randomChoice(min_score_moves)
 
     def AI_handler(self, player):
         print(self.grid)
-        move = self.minMax(None, MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf, player.idt == 1, player.idt)
-        # print('Selected move : ', move)
+        score, move = self.minMax(None, MAX_DEPTH[self.indexdifficulty], -np.inf, np.inf,
+                                  player.idt == 1, player.idt - 1)
+        print('Score : ', score, ' | Selected move : ', move)
         AIToken = [token for token in self.playerstokens if token[0] == player.idt]
 
         if move[0] == 0:
@@ -399,28 +396,14 @@ class Teeko:
         # print(self.turn_to, self.turn_to.AI)
 
         if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
-            if self.over(self.players[1]):
-                print("P2 win")
-                print("state : \n", self.grid)
-                i = 1 / 0
-            elif self.over(self.players[0]):
-                print("P1 Win")
-                print("state : \n", self.grid)
-                i = 1 / 0
+            player = self.turn_to
+            if not player.has_played:
+                if player.AI and self.minmax_thread is None:
+                    self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
+                    self.minmax_thread.start()
             else:
-                player = self.turn_to
-                if not player.has_played:
-                    if player.AI and self.minmax_thread is None:
-                        self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
-                        self.minmax_thread.start()
-
-                    # else:
-                    #     # TODO: allow human player to move his tokens
-                    #     player.has_played = True  # TODO: move that to parse_event, somewhere
-
-                else:
-                    self.turn_to = self.players[abs(np.where(self.players == player)[0][0] - 1)]
-                    player.has_played = False
+                self.turn_to = self.players[abs(np.where(self.players == player)[0][0] - 1)]
+                player.has_played = False
 
     def render(self):
         self.surf.fill(BACKGROUND)
