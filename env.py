@@ -287,13 +287,13 @@ class Teeko:
             # print("state after move : \n", self.grid)
 
             if DEPTH_IS_ZERO or self.over(player):
+                score = self.get_score()
                 if PLACEMENT:
                     self.removeToken(player, move[1])
                 else:
                     self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
                                    [-move[2][0], -move[2][1]])
-
-                return self.get_score()
+                return score
 
         if maximizing_player:
             max_score = -np.inf
@@ -372,16 +372,24 @@ class Teeko:
                     break
 
         else:
-            for dropZones in self.plate.playableZones:
-                if dropZones.abscisse == move[1][1] and dropZones.ordonne == move[1][0]:
-                    dropZones.available = True
-                    for Tokens in AIToken:
-                        if Tokens[2].initialx == dropZones.x and Tokens[2].initialy == dropZones.y:
-                            self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
-                            for dropZones in self.plate.playableZones:
-                                if dropZones.abscisse == move[1][1] + move[2][1] and dropZones.ordonne == move[1][0] + move[2][0]:
-                                    Tokens[2].placeToken((dropZones.x,dropZones.y))
+            current_drop_zone, future_drop_zone, i = None, None, 0
+            while current_drop_zone is None or future_drop_zone is None:
+                drop_zone = self.plate.playableZones[i]
+                if current_drop_zone is None and \
+                        drop_zone.abscisse == move[1][1] and drop_zone.ordonne == move[1][0]:
+                    current_drop_zone = drop_zone
+                if future_drop_zone is None and \
+                        drop_zone.abscisse == move[1][1] + move[2][1] and drop_zone.ordonne == move[1][0] + move[2][0]:
+                    future_drop_zone = drop_zone
+                i += 1
 
+            current_drop_zone.available = True
+            for Tokens in AIToken:
+                if Tokens[2].initialx == current_drop_zone.x and Tokens[2].initialy == current_drop_zone.y:
+                    self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
+                    Tokens[2].placeToken((future_drop_zone.x, future_drop_zone.y))
+                    future_drop_zone.available = False
+                    break
 
         self.end_last_turn = time.time()
         self.minmax_thread = None
@@ -461,11 +469,22 @@ class Teeko:
         if event.type == pygame.MOUSEBUTTONUP:
             if self.selectedtoken is not None:
                 for dropZone in self.plate.playableZones:
-                    if dropZone.on_dropzone(pos) and dropZone.isAvailable():
-                        dropZone.available = False
-                        self.selectedtoken.placeToken((dropZone.x, dropZone.y))
+                    if dropZone.isAvailable() and dropZone.on_dropzone(pos):
+                        current_drop_zone, i = None, 0
+                        while i < len(self.plate.playableZones) and current_drop_zone is None:
+                            drop_zone = self.plate.playableZones[i]
+                            if self.selectedtoken.initialx == drop_zone.x and \
+                                    self.selectedtoken.initialy == drop_zone.y:
+                                current_drop_zone = drop_zone
+                            i += 1
+                        if current_drop_zone is not None:
+                            self.removeToken(self.turn_to, (current_drop_zone.ordonne, current_drop_zone.abscisse))
+                            current_drop_zone.available = True
+
                         self.addToken(self.turn_to, (dropZone.ordonne, dropZone.abscisse))
-                        # TODO: update grid and token objects ???
+                        self.selectedtoken.placeToken((dropZone.x, dropZone.y))
+                        dropZone.available = False
+
                         self.selectedtoken = None
                         self.turn_to.has_played = True
                         break
