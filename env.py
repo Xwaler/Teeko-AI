@@ -65,6 +65,7 @@ class PlayableZone:
         self.surf = surf
         self.x = x
         self.y = y
+        self.available = True
 
     def draw(self):
         pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS+5, TOKEN_THICKNESS)
@@ -73,6 +74,9 @@ class PlayableZone:
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
             return True
         return False
+
+    def isAvailable(self):
+        return self.available
 
 
 class Plate:
@@ -145,7 +149,8 @@ class Teeko:
         self.plate = Plate(surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
                            (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2, self.square_width * GRID_SIZE, self.square_width)
         self.token_dragging = False
-        self.selectedtoken = TokenView(self.surf, 0, 0)
+        self.initialToken = TokenView(self.surf, 0, 0)
+        self.selectedtoken = self.initialToken
         self.offset_Y = 0
         self.offset_X = 0
 
@@ -439,12 +444,13 @@ class Teeko:
 
         if event.type == pygame.MOUSEBUTTONUP:
             for dropZone in self.plate.playableZones:
-                if dropZone.on_dropzone(pos):
+                if dropZone.on_dropzone(pos) and dropZone.isAvailable():
+                    dropZone.available = False
                     self.selectedtoken.placeToken((dropZone.x, dropZone.y))
                 else:
-                    print("out")
                     self.selectedtoken.placeToken((self.selectedtoken.initialx, self.selectedtoken.initialy))
                 self.token_dragging = False
+            self.selectedtoken = self.initialToken
 
         if event.type == pygame.MOUSEMOTION:
             if self.token_dragging:
