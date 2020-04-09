@@ -315,12 +315,11 @@ class Teeko:
                 if beta <= alpha:
                     break
 
-            if move is not None:
-                if PLACEMENT:
-                    self.removeToken(player, move[1])
-                else:
-                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                                   [-move[2][0], -move[2][1]])
+            if PLACEMENT:
+                self.removeToken(player, move[1])
+            elif move is not None:
+                self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                               [-move[2][0], -move[2][1]])
 
             if not DEPTH_IS_MAX:
                 return max_score
@@ -347,12 +346,11 @@ class Teeko:
                 if beta <= alpha:
                     break
 
-            if move is not None:
-                if PLACEMENT:
-                    self.removeToken(player, move[1])
-                else:
-                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                                   [-move[2][0], -move[2][1]])
+            if PLACEMENT:
+                self.removeToken(player, move[1])
+            elif move is not None:
+                self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
+                               [-move[2][0], -move[2][1]])
 
             if not DEPTH_IS_MAX:
                 return min_score
