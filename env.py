@@ -433,7 +433,7 @@ class Teeko:
                 return CODE_TO_MENU
 
             for TokenView in self.playerstokens:
-                if TokenView[2].on_token(pos) and not TokenView[3] and self.turn_to.i == TokenView[1]:
+                if TokenView[2].on_token(pos) and not TokenView[3] and self.turn_to.idt == TokenView[1]:
                     self.selectedtoken = TokenView[2]
                     self.offset_X = TokenView[2].x - pos[0]
                     self.offset_Y = TokenView[2].y - pos[1]
@@ -445,6 +445,7 @@ class Teeko:
                     if dropZone.on_dropzone(pos) and dropZone.isAvailable():
                         dropZone.available = False
                         self.selectedtoken.placeToken((dropZone.x, dropZone.y))
+                        self.addToken(self.turn_to,(dropZone.abscisse,dropZone.ordonne))
                         # TODO: update grid and token objects ???
                         self.token_dragging = False
                         self.turn_to.has_played = True
