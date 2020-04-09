@@ -132,7 +132,7 @@ class Teeko:
         for k in range(0, 2):
             for m in range(0, 4):
                 self.playerstokens.append(
-                    (k, m, TokenView(
+                    (k+1, m+1, TokenView(
                         self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
                                 k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
                                                                          self.square_width * GRID_SIZE) / 2))),
