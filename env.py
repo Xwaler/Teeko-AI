@@ -135,7 +135,7 @@ class Teeko:
                                 k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
                                                                          self.square_width * GRID_SIZE) / 2))),
                         m * (TOKEN_RADIUS * 2 + 30) + 250
-                    ))
+                    ), False if self.players[k].AI is True else True)
                 )
 
         self.backbtn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
@@ -431,7 +431,7 @@ class Teeko:
                 return CODE_TO_MENU
 
             for TokenView in self.playerstokens:
-                if TokenView[2].on_token(pos):
+                if TokenView[2].on_token(pos) and not TokenView[3]:
                     self.selectedtoken = TokenView[2]
                     self.offset_X = TokenView[2].x - pos[0]
                     self.offset_Y = TokenView[2].y - pos[1]
