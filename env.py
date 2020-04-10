@@ -28,13 +28,13 @@ class Player:
     def __init__(self, i, AI,color):
         self.idt = i
         self.type = AI
-        self.AI = not AI == 0
+        self.AI = False
         self.tokens = []
         self.has_played = False
         self.colorindex = color
 
-    #def __repr__(self):
-     #   return self.idt.__repr__()
+    def __repr__(self):
+        return self.idt.__repr__()
 
 
 class Teeko:
@@ -65,16 +65,6 @@ class Teeko:
         self.player_two_rect.center = (
             int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
 
-        #TODO problem with players[]
-        for k in range(2):
-            self.players_tokens.extend(
-                (k + 1, m + 1, TokenView(
-                    self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
-                            k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
-                                                                     self.square_width * GRID_SIZE) / 2))),
-                    m * (TOKEN_RADIUS * 2 + 30) + 250
-                ), self.players[k].AI) for m in range(4)
-            )
 
         self.back_btn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                                '< Back', BACKGROUND)
@@ -85,6 +75,17 @@ class Teeko:
         self.selected_token = None
         self.offset_y = 0
         self.offset_x = 0
+
+    def initTokens(self):
+        for k in range(2):
+            self.players_tokens.extend(
+                (k + 1, m + 1, TokenView(
+                    self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
+                            k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
+                                                                     self.square_width * GRID_SIZE) / 2))),
+                    m * (TOKEN_RADIUS * 2 + 30) + 250
+                ), self.players[k].AI) for m in range(4)
+            )
 
     def won(self):
         print(f'Game finished. Player {self.turn_to.idt} won\n', self.grid)
