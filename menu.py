@@ -3,7 +3,7 @@ import math
 import pygame
 
 from constants import *
-from tools import Button
+from views import Button
 
 
 class ColorChanger:
@@ -29,98 +29,99 @@ class Menu:
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 180)
         self.title = self.font.render('Teeko AI', True, BLACK)
-        self.titleRect = self.title.get_rect()
-        self.titleRect.center = (SCREEN_SIZE[0] / 2, 200)
+        self.title_rect = self.title.get_rect()
+        self.title_rect.center = (SCREEN_SIZE[0] / 2, 200)
 
-        self.INDEXCOLORONE = 0
-        self.INDEXCOLORTWO = 1
-        self.indexdifficulty = 0
+        self.INDEX_COLOR_ONE = 0
+        self.INDEX_COLOR_TWO = 1
+        self.index_difficulty = 0
 
-        self.colorbtnone = ColorChanger(int((SCREEN_SIZE[0] - 400) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
-                                        COLORS[self.INDEXCOLORONE])
-        self.colorbtntwo = ColorChanger(int((SCREEN_SIZE[0] - 400) / 2 + 300), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
-                                        COLORS[self.INDEXCOLORTWO])
-
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
-        self.playerone = self.font.render('Player 1', True, BLACK)
-        self.playeronerect = self.playerone.get_rect()
-        self.playeronerect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 50), (SCREEN_SIZE[1] - 30) / 2 + 30)
+        self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 400) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
+                                          COLORS[self.INDEX_COLOR_ONE])
+        self.color_btn_two = ColorChanger(int((SCREEN_SIZE[0] - 400) / 2 + 300), int((SCREEN_SIZE[1] - 30) / 2 + 30),
+                                          30,
+                                          COLORS[self.INDEX_COLOR_TWO])
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
-        self.playertwo = self.font.render('Player 2', True, BLACK)
-        self.playertworect = self.playertwo.get_rect()
-        self.playertworect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 350), (SCREEN_SIZE[1] - 30) / 2 + 30)
+        self.player_one = self.font.render('Player 1', True, BLACK)
+        self.player_one_rect = self.player_one.get_rect()
+        self.player_one_rect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 50), (SCREEN_SIZE[1] - 30) / 2 + 30)
 
-        self.startbtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 220, 200, 50, 'Start',
-                               BACKGROUND)
-        self.settingsbtn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50,
-                                  'AI  Difficulty : ' + DIFFICULTY[self.indexdifficulty],
-                                  BACKGROUND)
-        self.leavebtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 290, 200, 50, 'Leave',
-                               BACKGROUND)
+        self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
+        self.player_two = self.font.render('Player 2', True, BLACK)
+        self.player_two_rect = self.player_two.get_rect()
+        self.player_two_rect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 350), (SCREEN_SIZE[1] - 30) / 2 + 30)
+
+        self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 220, 200, 50, 'Start',
+                                BACKGROUND)
+        self.settings_btn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50,
+                                   'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty],
+                                   BACKGROUND)
+        self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 290, 200, 50, 'Leave',
+                                BACKGROUND)
 
     def parse_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
 
-            if self.startbtn.on_button(pos):
+            if self.start_btn.on_button(pos):
                 return CODE_TO_GAME
 
-            if self.settingsbtn.on_button(pos):
-                if self.indexdifficulty < 2:
-                    self.indexdifficulty += 1
+            if self.settings_btn.on_button(pos):
+                if self.index_difficulty < 2:
+                    self.index_difficulty += 1
                 else:
-                    self.indexdifficulty = 0
+                    self.index_difficulty = 0
 
-                self.settingsbtn.text = 'AI  Difficulty : ' + DIFFICULTY[self.indexdifficulty]
+                self.settings_btn.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty]
 
-            if self.leavebtn.on_button(pos):
+            if self.leave_btn.on_button(pos):
                 pygame.quit()
                 quit()
 
-            if self.colorbtnone.changeColor(pos):
-                if self.INDEXCOLORONE + 1 < len(COLORS):
-                    if self.INDEXCOLORONE + 1 != self.INDEXCOLORTWO:
-                        self.INDEXCOLORONE += 1
+            if self.color_btn_one.changeColor(pos):
+                if self.INDEX_COLOR_ONE + 1 < len(COLORS):
+                    if self.INDEX_COLOR_ONE + 1 != self.INDEX_COLOR_TWO:
+                        self.INDEX_COLOR_ONE += 1
                     else:
-                        self.INDEXCOLORONE += 2
+                        self.INDEX_COLOR_ONE += 2
                 else:
-                    if self.INDEXCOLORTWO == 0:
-                        self.INDEXCOLORONE = 1
+                    if self.INDEX_COLOR_TWO == 0:
+                        self.INDEX_COLOR_ONE = 1
                     else:
-                        self.INDEXCOLORONE = 0
-            if self.colorbtntwo.changeColor(pos):
-                if self.INDEXCOLORTWO + 1 < len(COLORS):
-                    if self.INDEXCOLORTWO + 1 != self.INDEXCOLORONE:
-                        self.INDEXCOLORTWO += 1
+                        self.INDEX_COLOR_ONE = 0
+            if self.color_btn_two.changeColor(pos):
+                if self.INDEX_COLOR_TWO + 1 < len(COLORS):
+                    if self.INDEX_COLOR_TWO + 1 != self.INDEX_COLOR_ONE:
+                        self.INDEX_COLOR_TWO += 1
                     else:
-                        self.INDEXCOLORTWO += 2
+                        self.INDEX_COLOR_TWO += 2
                 else:
-                    if self.INDEXCOLORONE == 0:
-                        self.INDEXCOLORTWO = 1
+                    if self.INDEX_COLOR_ONE == 0:
+                        self.INDEX_COLOR_TWO = 1
                     else:
-                        self.INDEXCOLORTWO = 0
+                        self.INDEX_COLOR_TWO = 0
 
     def render(self):
         self.surf.fill(BACKGROUND)
-        if self.startbtn.get_rect().collidepoint(pygame.mouse.get_pos()):
-            self.startbtn.hover(self.surf)
+        if self.start_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.start_btn.hover(self.surf)
         else:
-            self.startbtn.drawRect(self.surf)
+            self.start_btn.drawRect(self.surf)
 
-        if self.settingsbtn.get_rect().collidepoint(pygame.mouse.get_pos()):
-            self.settingsbtn.hover(self.surf)
+        if self.settings_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.settings_btn.hover(self.surf)
         else:
-            self.settingsbtn.drawRect(self.surf)
+            self.settings_btn.drawRect(self.surf)
 
-        if self.leavebtn.get_rect().collidepoint(pygame.mouse.get_pos()):
-            self.leavebtn.hover(self.surf)
+        if self.leave_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.leave_btn.hover(self.surf)
         else:
-            self.leavebtn.drawRect(self.surf)
+            self.leave_btn.drawRect(self.surf)
 
-        self.colorbtnone.drawCircle(self.surf, COLORS[self.INDEXCOLORONE])
-        self.colorbtntwo.drawCircle(self.surf, COLORS[self.INDEXCOLORTWO])
+        self.color_btn_one.drawCircle(self.surf, COLORS[self.INDEX_COLOR_ONE])
+        self.color_btn_two.drawCircle(self.surf, COLORS[self.INDEX_COLOR_TWO])
 
-        self.surf.blit(self.title, self.titleRect)
-        self.surf.blit(self.playerone, self.playeronerect)
-        self.surf.blit(self.playertwo, self.playertworect)
+        self.surf.blit(self.title, self.title_rect)
+        self.surf.blit(self.player_one, self.player_one_rect)
+        self.surf.blit(self.player_two, self.player_two_rect)

@@ -33,8 +33,8 @@ def main():
             code = page_manager.current.parse_event(event)
 
             if code == CODE_TO_GAME:
-                game.playerscolors = [COLORS[menu.INDEXCOLORONE], COLORS[menu.INDEXCOLORTWO]]
-                game.indexdifficulty = menu.indexdifficulty
+                game.players_colors = [COLORS[menu.INDEX_COLOR_ONE], COLORS[menu.INDEX_COLOR_TWO]]
+                game.index_difficulty = menu.index_difficulty
                 page_manager.current = game
             elif code == CODE_TO_MENU:
                 page_manager.current = menu
