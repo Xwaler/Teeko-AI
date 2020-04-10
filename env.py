@@ -33,8 +33,8 @@ class Player:
         self.has_played = False
         self.colorindex = color
 
-    #def __repr__(self):
-     #   return self.idt.__repr__()
+    def __repr__(self):
+        return self.idt.__repr__()
 
 
 class Teeko:
@@ -78,7 +78,6 @@ class Teeko:
 
     def initTokens(self):
         for k in range(2):
-            print(self.players[k].AI)
             self.players_tokens.extend(
                 (k + 1, m + 1, TokenView(
                     self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (

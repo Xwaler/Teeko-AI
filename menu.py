@@ -115,9 +115,11 @@ class Menu:
             if self.tick_zone_two.on_button(pos):
                 if self.playertwo.type<2:
                     self.playertwo.type +=1
+                    self.playertwo.AI = True
                     self.AI_diff_two.able()
                 else:
                     self.playertwo.type = 0
+                    self.playertwo.AI = False
                     self.AI_diff_two.disable()
 
                 self.tick_zone_two.text = PLAYERTYPE[self.playertwo.type]
