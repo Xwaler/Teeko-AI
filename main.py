@@ -1,5 +1,7 @@
 import pygame
 
+import os
+
 from constants import *
 from env import Teeko
 from menu import Menu
@@ -7,6 +9,7 @@ from tools import PageManager
 
 
 def main():
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (200, 40)
     pygame.init()
     pygame.display.set_caption('Teeko-AI')
     icon = pygame.image.load('Teeko_logo.png')

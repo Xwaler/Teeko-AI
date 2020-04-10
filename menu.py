@@ -30,7 +30,7 @@ class Menu:
         self.font = pygame.font.Font('Amatic-Bold.ttf', 180)
         self.title = self.font.render('Teeko AI', True, BLACK)
         self.title_rect = self.title.get_rect()
-        self.title_rect.center = (SCREEN_SIZE[0] / 2, 200)
+        self.title_rect.center = (SCREEN_SIZE[0] / 2, 180)
 
         self.INDEX_COLOR_ONE = 0
         self.INDEX_COLOR_TWO = 1
@@ -68,7 +68,7 @@ class Menu:
         self.tick_text_two_rect = self.tick_text_one.get_rect()
         self.tick_text_two_rect.center = (int((SCREEN_SIZE[0] - 500) / 2) + 550, (SCREEN_SIZE[1] - 30) / 2 + 115)
 
-        self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 270, 200, 50, 'Start',
+        self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 230, 200, 50, 'Start',
                                 BACKGROUND)
         self.AI_diff_one = Button((SCREEN_SIZE[0] - 700) / 2 - 50, (SCREEN_SIZE[1] - 30) / 2 + 170, 250, 50,
                                    'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
@@ -83,7 +83,7 @@ class Menu:
         self.settings_btn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50,
                                    'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
                                    BACKGROUND)
-        self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 340, 200, 50, 'Leave',
+        self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
 
     def parse_event(self, event):
