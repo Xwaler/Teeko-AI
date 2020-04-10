@@ -44,8 +44,8 @@ class Teeko:
             self.players[i - 1] = Player(i, AI=i != 1)
         self.turn_to = randomChoice(self.players)
         self.index_difficulty = (0, 0)
-        self.player_one_AI = False
-        self.player_two_AI = False
+        self.player_one_type = 0
+        self.player_two_type = 0
 
         self.players_tokens = []
         self.players_colors = []

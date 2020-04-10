@@ -4,6 +4,7 @@ SURROUNDING = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
 TOKEN_NUMBER = 4
 
 DIFFICULTY = ['Easy', 'Normal', 'Hard']
+PLAYERTYPE = ['Humain', 'AI', 'Learning']
 MAX_DEPTH = [3, 4, 5]
 
 SCREEN_SIZE = (1200, 750)
