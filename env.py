@@ -28,14 +28,13 @@ class Player:
     def __init__(self, i, AI,color):
         self.idt = i
         self.type = AI
-        self.AI = AI != 0
+        self.AI = not AI == 0
         self.tokens = []
         self.has_played = False
         self.colorindex = color
-        self.playercolor = COLORS[color]
 
-    def __repr__(self):
-        return self.idt.__repr__()
+    #def __repr__(self):
+     #   return self.idt.__repr__()
 
 
 class Teeko:
@@ -44,6 +43,9 @@ class Teeko:
         self.grid = np.empty((GRID_SIZE, GRID_SIZE), dtype=Token)
         self.index_difficulty = (0, 0)
         self.players = []
+        for i in [1, 2]:
+            self.players.append(Player(i,0,i-1))
+        self.turn_to = randomChoice(self.players)
         #TODO need random for turn_to
         self.players_tokens = []
         self.end_last_turn = 0
@@ -348,12 +350,11 @@ class Teeko:
             self.back_btn.drawRect(self.surf)
 
         self.plate.render()
-
         for token_view in self.players_tokens:
             if token_view[0] == 1:
-                token_view[2].render(self.players[0].color)
+                token_view[2].render(COLORS[self.players[0].colorindex])
             elif token_view[0] == 2:
-                token_view[2].render(self.players[1].color)
+                token_view[2].render(COLORS[self.players[1].colorindex])
 
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()

@@ -3,6 +3,7 @@ import math
 import pygame
 
 from constants import *
+from env import Player
 from views import Button
 
 
@@ -35,18 +36,21 @@ class Menu:
         self.index_difficulty_one = 0
         self.index_difficulty_two = 0
 
+        self.playerone = Player(1, 0, 0)
+        self.playertwo = Player(2, 0, 1)
+
         self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
-                                          COLORS[self.INDEX_COLOR_ONE])
+                                          COLORS[self.playerone.colorindex])
         self.color_btn_two = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2 + 550), int((SCREEN_SIZE[1] - 30) / 2 + 30),
                                           30,
-                                          COLORS[self.INDEX_COLOR_TWO])
+                                          COLORS[self.playertwo.colorindex])
 
         self.tick_zone_one = Button((SCREEN_SIZE[0] - 700) / 2 , (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
-                                   PLAYERTYPE[self.player_one_type],
+                                   PLAYERTYPE[self.playerone.type],
                                    BACKGROUND)
 
         self.tick_zone_two = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
-                                  PLAYERTYPE[self.player_two_type],
+                                  PLAYERTYPE[self.playertwo.type],
                                   BACKGROUND)
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
@@ -73,9 +77,6 @@ class Menu:
         self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
 
-        self.playerone = Player(1,0, 0)
-        self.playertwo = Player(2,0, 1)
-
     def parse_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
@@ -100,52 +101,52 @@ class Menu:
                 self.AI_diff_two.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two]
 
             if self.tick_zone_one.on_button(pos):
-                if self.player_one.type < 2:
-                    self.player_one.type += 1
+                if self.playerone.type < 2:
+                    self.playerone.type += 1
                     self.AI_diff_one.able()
                 else:
-                    self.player_one.type = 0
+                    self.playerone.type = 0
                     self.AI_diff_one.disable()
 
-                self.tick_zone_one.text = PLAYERTYPE[self.player_one.type]
+                self.tick_zone_one.text = PLAYERTYPE[self.playerone.type]
 
             if self.tick_zone_two.on_button(pos):
-                if self.player_two.type<2:
-                    self.player_two.type +=1
+                if self.playertwo.type<2:
+                    self.playertwo.type +=1
                     self.AI_diff_two.able()
                 else:
-                    self.player_two.type = 0
+                    self.playertwo.type = 0
                     self.AI_diff_two.disable()
 
-                self.tick_zone_two.text = PLAYERTYPE[self.player_two.type]
+                self.tick_zone_two.text = PLAYERTYPE[self.playertwo.type]
 
             if self.leave_btn.on_button(pos):
                 pygame.quit()
                 quit()
 
             if self.color_btn_one.changeColor(pos):
-                if self.player_one.colorindex + 1 < len(COLORS):
-                    if self.player_one.colorindex + 1 != self.player_two.colorindex:
-                        self.player_one.colorindex += 1
+                if self.playerone.colorindex + 1 < len(COLORS):
+                    if self.playerone.colorindex + 1 != self.playertwo.colorindex:
+                        self.playerone.colorindex += 1
                     else:
-                        self.player_one.colorindex += 2
+                        self.playerone.colorindex += 2
                 else:
-                    if self.player_two.colorindex == 0:
-                        self.player_one.colorindex = 1
+                    if self.playertwo.colorindex == 0:
+                        self.playerone.colorindex = 1
                     else:
-                        self.player_one.colorindex = 0
+                        self.playerone.colorindex = 0
 
             if self.color_btn_two.changeColor(pos):
-                if self.player_two.colorindex + 1 < len(COLORS):
-                    if self.player_two.colorindex + 1 != self.player_one.colorindex:
-                        self.player_two.colorindex += 1
+                if self.playertwo.colorindex + 1 < len(COLORS):
+                    if self.playertwo.colorindex + 1 != self.playerone.colorindex:
+                        self.playertwo.colorindex += 1
                     else:
-                        self.player_two.colorindex += 2
+                        self.playertwo.colorindex += 2
                 else:
-                    if self.player_one.colorindex == 0:
-                        self.player_two.colorindex = 1
+                    if self.playerone.colorindex == 0:
+                        self.playertwo.colorindex = 1
                     else:
-                        self.player_two.colorindex = 0
+                        self.playertwo.colorindex = 0
 
     def render(self):
         self.surf.fill(BACKGROUND)
@@ -171,8 +172,8 @@ class Menu:
 
         self.tick_zone_one.drawRect(self.surf)
         self.tick_zone_two.drawRect(self.surf)
-        self.color_btn_one.drawCircle(self.surf, COLORS[self.INDEX_COLOR_ONE])
-        self.color_btn_two.drawCircle(self.surf, COLORS[self.INDEX_COLOR_TWO])
+        self.color_btn_one.drawCircle(self.surf, COLORS[self.playerone.colorindex])
+        self.color_btn_two.drawCircle(self.surf, COLORS[self.playertwo.colorindex])
 
         self.surf.blit(self.title, self.title_rect)
         self.surf.blit(self.player_one, self.player_one_rect)

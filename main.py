@@ -1,5 +1,5 @@
 import pygame
-
+import numpy as np
 import os
 
 from constants import *
@@ -36,7 +36,9 @@ def main():
             code = page_manager.current.parse_event(event)
 
             if code == CODE_TO_GAME:
-                game.players = (menu.player_one,menu.player_two)
+                game.players.clear()
+                game.players.append(menu.playerone)
+                game.players.append(menu.playertwo)
                 game.index_difficulty = (menu.index_difficulty_one,menu.index_difficulty_two)
                 page_manager.current = game
             elif code == CODE_TO_MENU:
