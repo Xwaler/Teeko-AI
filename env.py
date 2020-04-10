@@ -191,7 +191,7 @@ class Teeko:
         # print("p1 : ", p1)
         p2 = self.getAligned(self.players[1])
         # print("p2 : ", p2)
-        return (p1 ** 2) - (p2 ** 2)
+        return (p1 ** 1.5) - (p2 ** 1.5)
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, depth, alpha, beta, player):
@@ -210,7 +210,7 @@ class Teeko:
         # print("move : ", move)
 
         if DEPTH_IS_ZERO or self.over():
-            return self.get_score()
+            return self.get_score() * (1 + (.25 * depth))
 
         if player.idt == 1:
             max_score = -np.inf
@@ -245,7 +245,7 @@ class Teeko:
             if not DEPTH_IS_MAX:
                 return max_score
             else:
-                print('Max\n', max_score_moves)
+                print('Max: ', max_score_moves)
                 return max_score, randomChoice(max_score_moves)
 
         else:
@@ -282,7 +282,7 @@ class Teeko:
             if not DEPTH_IS_MAX:
                 return min_score
             else:
-                print('Min\n', min_score_moves)
+                print('Min: ', min_score_moves)
                 return min_score, randomChoice(min_score_moves)
 
     def AI_handler(self, player):
