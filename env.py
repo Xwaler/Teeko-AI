@@ -25,30 +25,29 @@ class Token:
 
 
 class Player:
-    def __init__(self, i, AI=True):
+    def __init__(self, i, AI,color):
         self.idt = i
-        self.AI = AI
+        self.type = AI
+        self.AI = not AI == 0
         self.tokens = []
         self.has_played = False
+        self.colorindex = color
 
-    def __repr__(self):
-        return self.idt.__repr__()
+    #def __repr__(self):
+     #   return self.idt.__repr__()
 
 
 class Teeko:
     def __init__(self, surf):
         self.surf = surf
         self.grid = np.empty((GRID_SIZE, GRID_SIZE), dtype=Token)
-        self.players = np.empty(2, dtype=Player)
-        for i in [1, 2]:
-            self.players[i - 1] = Player(i, AI=i != 1)
-        self.turn_to = randomChoice(self.players)
         self.index_difficulty = (0, 0)
-        self.player_one_AI = False
-        self.player_two_AI = False
-
+        self.players = []
+        for i in [1, 2]:
+            self.players.append(Player(i,0,i-1))
+        self.turn_to = randomChoice(self.players)
+        #TODO need random for turn_to
         self.players_tokens = []
-        self.players_colors = []
         self.end_last_turn = 0
 
         self.minmax_thread = None
@@ -66,6 +65,7 @@ class Teeko:
         self.player_two_rect.center = (
             int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
 
+        #TODO problem with players[]
         for k in range(2):
             self.players_tokens.extend(
                 (k + 1, m + 1, TokenView(
@@ -350,12 +350,11 @@ class Teeko:
             self.back_btn.drawRect(self.surf)
 
         self.plate.render()
-
         for token_view in self.players_tokens:
             if token_view[0] == 1:
-                token_view[2].render(self.players_colors[0])
+                token_view[2].render(COLORS[self.players[0].colorindex])
             elif token_view[0] == 2:
-                token_view[2].render(self.players_colors[1])
+                token_view[2].render(COLORS[self.players[1].colorindex])
 
     def parse_event(self, event):
         pos = pygame.mouse.get_pos()

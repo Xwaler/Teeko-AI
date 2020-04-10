@@ -3,6 +3,7 @@ import math
 import pygame
 
 from constants import *
+from env import Player
 from views import Button
 
 
@@ -30,26 +31,27 @@ class Menu:
         self.font = pygame.font.Font('Amatic-Bold.ttf', 180)
         self.title = self.font.render('Teeko AI', True, BLACK)
         self.title_rect = self.title.get_rect()
-        self.title_rect.center = (SCREEN_SIZE[0] / 2, 200)
+        self.title_rect.center = (SCREEN_SIZE[0] / 2, 180)
 
-        self.INDEX_COLOR_ONE = 0
-        self.INDEX_COLOR_TWO = 1
         self.index_difficulty_one = 0
         self.index_difficulty_two = 0
-        self.player_one_AI = False
-        self.player_two_AI = False
+
+        self.playerone = Player(1, 0, 0)
+        self.playertwo = Player(2, 0, 1)
 
         self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
-                                          COLORS[self.INDEX_COLOR_ONE])
+                                          COLORS[self.playerone.colorindex])
         self.color_btn_two = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2 + 550), int((SCREEN_SIZE[1] - 30) / 2 + 30),
                                           30,
-                                          COLORS[self.INDEX_COLOR_TWO])
+                                          COLORS[self.playertwo.colorindex])
 
-        self.tick_zone_one = Button(((SCREEN_SIZE[0] - 600) / 2),(SCREEN_SIZE[1] - 30) / 2 + 100, 15, 35, "",
-                                BACKGROUND)
+        self.tick_zone_one = Button((SCREEN_SIZE[0] - 700) / 2 , (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
+                                   PLAYERTYPE[self.playerone.type],
+                                   BACKGROUND)
 
-        self.tick_zone_two = Button(((SCREEN_SIZE[0] - 600) / 2 + 550), (SCREEN_SIZE[1] - 30) / 2 + 100, 15, 35, "",
-                                    BACKGROUND)
+        self.tick_zone_two = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
+                                  PLAYERTYPE[self.playertwo.type],
+                                  BACKGROUND)
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
         self.player_one = self.font.render('Player 1', True, BLACK)
@@ -60,15 +62,7 @@ class Menu:
         self.player_two_rect = self.player_two.get_rect()
         self.player_two_rect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 450), (SCREEN_SIZE[1] - 30) / 2 + 30)
 
-        self.tick_text_one = self.font.render('AI',True,BLACK)
-        self.tick_text_one_rect = self.tick_text_one.get_rect()
-        self.tick_text_one_rect.center = (int((SCREEN_SIZE[0] - 500) / 2), (SCREEN_SIZE[1] - 30) / 2 + 115)
-
-        self.tick_text_two = self.font.render('AI', True, BLACK)
-        self.tick_text_two_rect = self.tick_text_one.get_rect()
-        self.tick_text_two_rect.center = (int((SCREEN_SIZE[0] - 500) / 2) + 550, (SCREEN_SIZE[1] - 30) / 2 + 115)
-
-        self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 270, 200, 50, 'Start',
+        self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 230, 200, 50, 'Start',
                                 BACKGROUND)
         self.AI_diff_one = Button((SCREEN_SIZE[0] - 700) / 2 - 50, (SCREEN_SIZE[1] - 30) / 2 + 170, 250, 50,
                                    'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
@@ -80,10 +74,7 @@ class Menu:
                                   BACKGROUND)
         self.AI_diff_two.disable()
 
-        self.settings_btn = Button((SCREEN_SIZE[0] - 250) / 2, (SCREEN_SIZE[1] - 50) / 2 + 150, 250, 50,
-                                   'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
-                                   BACKGROUND)
-        self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 340, 200, 50, 'Leave',
+        self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
 
     def parse_event(self, event):
@@ -110,52 +101,52 @@ class Menu:
                 self.AI_diff_two.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two]
 
             if self.tick_zone_one.on_button(pos):
-                if self.tick_zone_one.text == "":
-                    self.tick_zone_one.text = 'X'
-                    self.player_one_AI = True
+                if self.playerone.type < 2:
+                    self.playerone.type += 1
                     self.AI_diff_one.able()
                 else:
-                    self.tick_zone_one.text = ""
+                    self.playerone.type = 0
                     self.AI_diff_one.disable()
-                    self.player_one_AI = False
+
+                self.tick_zone_one.text = PLAYERTYPE[self.playerone.type]
 
             if self.tick_zone_two.on_button(pos):
-                if self.tick_zone_two.text == "":
-                    self.tick_zone_two.text = 'X'
-                    self.player_two_AI = True
+                if self.playertwo.type<2:
+                    self.playertwo.type +=1
                     self.AI_diff_two.able()
                 else:
-                    self.tick_zone_two.text = ""
+                    self.playertwo.type = 0
                     self.AI_diff_two.disable()
-                    self.player_two_AI = False
+
+                self.tick_zone_two.text = PLAYERTYPE[self.playertwo.type]
 
             if self.leave_btn.on_button(pos):
                 pygame.quit()
                 quit()
 
             if self.color_btn_one.changeColor(pos):
-                if self.INDEX_COLOR_ONE + 1 < len(COLORS):
-                    if self.INDEX_COLOR_ONE + 1 != self.INDEX_COLOR_TWO:
-                        self.INDEX_COLOR_ONE += 1
+                if self.playerone.colorindex + 1 < len(COLORS):
+                    if self.playerone.colorindex + 1 != self.playertwo.colorindex:
+                        self.playerone.colorindex += 1
                     else:
-                        self.INDEX_COLOR_ONE += 2
+                        self.playerone.colorindex += 2
                 else:
-                    if self.INDEX_COLOR_TWO == 0:
-                        self.INDEX_COLOR_ONE = 1
+                    if self.playertwo.colorindex == 0:
+                        self.playerone.colorindex = 1
                     else:
-                        self.INDEX_COLOR_ONE = 0
+                        self.playerone.colorindex = 0
 
             if self.color_btn_two.changeColor(pos):
-                if self.INDEX_COLOR_TWO + 1 < len(COLORS):
-                    if self.INDEX_COLOR_TWO + 1 != self.INDEX_COLOR_ONE:
-                        self.INDEX_COLOR_TWO += 1
+                if self.playertwo.colorindex + 1 < len(COLORS):
+                    if self.playertwo.colorindex + 1 != self.playerone.colorindex:
+                        self.playertwo.colorindex += 1
                     else:
-                        self.INDEX_COLOR_TWO += 2
+                        self.playertwo.colorindex += 2
                 else:
-                    if self.INDEX_COLOR_ONE == 0:
-                        self.INDEX_COLOR_TWO = 1
+                    if self.playerone.colorindex == 0:
+                        self.playertwo.colorindex = 1
                     else:
-                        self.INDEX_COLOR_TWO = 0
+                        self.playertwo.colorindex = 0
 
     def render(self):
         self.surf.fill(BACKGROUND)
@@ -181,11 +172,9 @@ class Menu:
 
         self.tick_zone_one.drawRect(self.surf)
         self.tick_zone_two.drawRect(self.surf)
-        self.color_btn_one.drawCircle(self.surf, COLORS[self.INDEX_COLOR_ONE])
-        self.color_btn_two.drawCircle(self.surf, COLORS[self.INDEX_COLOR_TWO])
+        self.color_btn_one.drawCircle(self.surf, COLORS[self.playerone.colorindex])
+        self.color_btn_two.drawCircle(self.surf, COLORS[self.playertwo.colorindex])
 
         self.surf.blit(self.title, self.title_rect)
         self.surf.blit(self.player_one, self.player_one_rect)
-        self.surf.blit(self.tick_text_one, self.tick_text_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
-        self.surf.blit(self.tick_text_two, self.tick_text_two_rect)

@@ -1,4 +1,6 @@
 import pygame
+import numpy as np
+import os
 
 from constants import *
 from env import Teeko
@@ -7,6 +9,7 @@ from tools import PageManager
 
 
 def main():
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (200, 40)
     pygame.init()
     pygame.display.set_caption('Teeko-AI')
     icon = pygame.image.load('Teeko_logo.png')
@@ -33,9 +36,10 @@ def main():
             code = page_manager.current.parse_event(event)
 
             if code == CODE_TO_GAME:
-                game.players_colors = [COLORS[menu.INDEX_COLOR_ONE], COLORS[menu.INDEX_COLOR_TWO]]
+                game.players.clear()
+                game.players.append(menu.playerone)
+                game.players.append(menu.playertwo)
                 game.index_difficulty = (menu.index_difficulty_one,menu.index_difficulty_two)
-                game.player_one_AI, game.player_two_AI = (menu.player_one_AI,menu.player_two_AI)
                 page_manager.current = game
             elif code == CODE_TO_MENU:
                 page_manager.current = menu
