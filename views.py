@@ -82,13 +82,16 @@ class Button:
         self.h = h
         self.color = color
         self.text = text
+        self.bordercolor = BLACK
+        self.textcolor = BLACK
         self.rect = pygame.Rect(x, y, w, h)
+        self.disableVal = False
 
     def drawRect(self, screen):
-        pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, self.w + 4, self.h + 4), 0)
+        pygame.draw.rect(screen, self.bordercolor, (self.x - 2, self.y - 2, self.w + 4, self.h + 4), 0)
         pygame.draw.rect(screen, self.color, self.rect, 0)
         font = pygame.font.Font('Amatic-Bold.ttf', 35)
-        text = font.render(self.text, 1, BLACK)
+        text = font.render(self.text, 1, self.textcolor)
         screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
 
     def on_button(self, pos):
@@ -101,7 +104,20 @@ class Button:
         return self.rect
 
     def hover(self, screen):
-        pygame.draw.rect(screen, BLACK, self.rect, 0)
+        pygame.draw.rect(screen, self.bordercolor, self.rect, 0)
         font = pygame.font.Font('Amatic-Bold.ttf', 35)
         text = font.render(self.text, 1, WHITE)
         screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
+
+    def disable(self):
+        self.disableVal = True
+        self.bordercolor = GRAY
+        self.textcolor = GRAY
+
+    def able(self):
+        self.bordercolor = BLACK
+        self.disableVal = False
+        self.textcolor = BLACK
+
+    def isDisable(self):
+        return self.disableVal

@@ -43,7 +43,9 @@ class Teeko:
         for i in [1, 2]:
             self.players[i - 1] = Player(i, AI=i != 1)
         self.turn_to = randomChoice(self.players)
-        self.index_difficulty = 0
+        self.index_difficulty = (0, 0)
+        self.player_one_AI = False
+        self.player_two_AI = False
 
         self.players_tokens = []
         self.players_colors = []
@@ -197,7 +199,7 @@ class Teeko:
             raise SystemExit()
 
         DEPTH_IS_ZERO = depth == 0
-        DEPTH_IS_MAX = depth == MAX_DEPTH[self.index_difficulty]
+        DEPTH_IS_MAX = depth == MAX_DEPTH[self.index_difficulty[0]]
 
         # print("\n\ndepth : ", depth)
 
@@ -285,7 +287,7 @@ class Teeko:
 
     def AI_handler(self, player):
         print(self.grid)
-        score, move = self.minMax(MAX_DEPTH[self.index_difficulty], -np.inf, np.inf, player)
+        score, move = self.minMax(MAX_DEPTH[self.index_difficulty[0]], -np.inf, np.inf, player)
         print('Score : ', score, ' | Selected move : ', move)
         AI_tokens = [token for token in self.players_tokens if token[0] == player.idt]
 
