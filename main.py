@@ -39,6 +39,7 @@ def main():
                 game.players.clear()
                 game.players.append(menu.playerone)
                 game.players.append(menu.playertwo)
+                game.initTokens()
                 game.index_difficulty = (menu.index_difficulty_one,menu.index_difficulty_two)
                 page_manager.current = game
             elif code == CODE_TO_MENU:
