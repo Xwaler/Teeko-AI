@@ -33,11 +33,11 @@ class Menu:
         self.title_rect = self.title.get_rect()
         self.title_rect.center = (SCREEN_SIZE[0] / 2, 180)
 
-        self.index_difficulty_one = 0
-        self.index_difficulty_two = 0
+        self.index_difficulty_one = 1
+        self.index_difficulty_two = 1
 
         self.playerone = Player(1, 0, 0)
-        self.playertwo = Player(2, 0, 1)
+        self.playertwo = Player(2, 1, 1)
 
         self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
                                           COLORS[self.playerone.colorindex])
@@ -45,13 +45,13 @@ class Menu:
                                           30,
                                           COLORS[self.playertwo.colorindex])
 
-        self.tick_zone_one = Button((SCREEN_SIZE[0] - 700) / 2 , (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
-                                   PLAYERTYPE[self.playerone.type],
-                                   BACKGROUND)
+        self.tick_zone_one = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
+                                    PLAYERTYPE[self.playerone.ptype],
+                                    BACKGROUND)
 
         self.tick_zone_two = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
-                                  PLAYERTYPE[self.playertwo.type],
-                                  BACKGROUND)
+                                    PLAYERTYPE[self.playertwo.ptype],
+                                    BACKGROUND)
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
         self.player_one = self.font.render('Player 1', True, BLACK)
@@ -65,14 +65,13 @@ class Menu:
         self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 230, 200, 50, 'Start',
                                 BACKGROUND)
         self.AI_diff_one = Button((SCREEN_SIZE[0] - 700) / 2 - 50, (SCREEN_SIZE[1] - 30) / 2 + 170, 250, 50,
-                                   'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
-                                   BACKGROUND)
+                                  'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
+                                  BACKGROUND)
         self.AI_diff_one.disable()
 
         self.AI_diff_two = Button((SCREEN_SIZE[0] - 700) / 2 + 500, (SCREEN_SIZE[1] - 30) / 2 + 170, 250, 50,
                                   'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two],
                                   BACKGROUND)
-        self.AI_diff_two.disable()
 
         self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
@@ -101,28 +100,24 @@ class Menu:
                 self.AI_diff_two.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two]
 
             if self.tick_zone_one.on_button(pos):
-                if self.playerone.type < 2:
-                    self.playerone.type += 1
-                    self.playerone.AI = True
+                if self.playerone.ptype < 2:
+                    self.playerone.ptype += 1
                     self.AI_diff_one.able()
                 else:
-                    self.playerone.type = 0
-                    self.playerone.AI = False
+                    self.playerone.ptype = 0
                     self.AI_diff_one.disable()
 
-                self.tick_zone_one.text = PLAYERTYPE[self.playerone.type]
+                self.tick_zone_one.text = PLAYERTYPE[self.playerone.ptype]
 
             if self.tick_zone_two.on_button(pos):
-                if self.playertwo.type<2:
-                    self.playertwo.type +=1
-                    self.playertwo.AI = True
+                if self.playertwo.ptype < 2:
+                    self.playertwo.ptype += 1
                     self.AI_diff_two.able()
                 else:
-                    self.playertwo.type = 0
-                    self.playertwo.AI = False
+                    self.playertwo.ptype = 0
                     self.AI_diff_two.disable()
 
-                self.tick_zone_two.text = PLAYERTYPE[self.playertwo.type]
+                self.tick_zone_two.text = PLAYERTYPE[self.playertwo.ptype]
 
             if self.leave_btn.on_button(pos):
                 pygame.quit()

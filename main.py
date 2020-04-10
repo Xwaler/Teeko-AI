@@ -1,6 +1,6 @@
-import pygame
-import numpy as np
 import os
+
+import pygame
 
 from constants import *
 from env import Teeko
@@ -27,23 +27,18 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 pygame.quit()
-                if game.minmax_thread is not None:
-                    game.kill_thread = True
-                    while game.minmax_thread.isAlive():
-                        continue
+                game.killMinMax()
                 quit()
 
             code = page_manager.current.parse_event(event)
 
             if code == CODE_TO_GAME:
-                game.players.clear()
-                game.players.append(menu.playerone)
-                game.players.append(menu.playertwo)
-                print(game.players[1].AI)
-                game.initTokens()
-                game.index_difficulty = (menu.index_difficulty_one,menu.index_difficulty_two)
+                game.reset(players=(menu.playerone, menu.playertwo),
+                           index_difficulty=(menu.index_difficulty_one, menu.index_difficulty_two))
                 page_manager.current = game
+
             elif code == CODE_TO_MENU:
+                game.killMinMax()
                 page_manager.current = menu
 
         if page_manager.current == game:

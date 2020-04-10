@@ -25,10 +25,9 @@ class Token:
 
 
 class Player:
-    def __init__(self, i, AI,color):
+    def __init__(self, i, ptype, color):
         self.idt = i
-        self.type = AI
-        self.AI = False
+        self.ptype = ptype
         self.tokens = []
         self.has_played = False
         self.colorindex = color
@@ -40,13 +39,37 @@ class Player:
 class Teeko:
     def __init__(self, surf):
         self.surf = surf
+        self.grid = None
+        self.index_difficulty = None
+        self.players = None
+        self.turn_to = None
+        self.players_tokens = None
+        self.end_last_turn = None
+        self.minmax_thread = None
+        self.kill_thread = False
+        self.square_width = None
+        self.font = None
+        self.player_one = None
+        self.player_one_rect = None
+        self.player_two = None
+        self.player_two_rect = None
+        self.back_btn = None
+        self.plate = None
+        self.selected_token = None
+        self.offset_y = None
+        self.offset_x = None
+
+    def reset(self, players=None, index_difficulty=(1, 1)):
         self.grid = np.empty((GRID_SIZE, GRID_SIZE), dtype=Token)
-        self.index_difficulty = (0, 0)
-        self.players = []
-        for i in [1, 2]:
-            self.players.append(Player(i,0,i-1))
+        self.index_difficulty = index_difficulty
+        if players is not None:
+            self.players = players
+            for player in self.players:
+                player.tokens.clear()
+        else:
+            self.players = [Player(i, 1, i - 1) for i in [1, 2]]
         self.turn_to = randomChoice(self.players)
-        #TODO need random for turn_to
+
         self.players_tokens = []
         self.end_last_turn = 0
 
@@ -65,18 +88,16 @@ class Teeko:
         self.player_two_rect.center = (
             int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
 
-
         self.back_btn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                                '< Back', BACKGROUND)
 
-        self.plate = Plate(surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
+        self.plate = Plate(self.surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
                            (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
                            self.square_width * GRID_SIZE, self.square_width)
         self.selected_token = None
         self.offset_y = 0
         self.offset_x = 0
 
-    def initTokens(self):
         for k in range(2):
             self.players_tokens.extend(
                 (k + 1, m + 1, TokenView(
@@ -84,12 +105,18 @@ class Teeko:
                             k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
                                                                      self.square_width * GRID_SIZE) / 2))),
                     m * (TOKEN_RADIUS * 2 + 30) + 250
-                ), self.players[k].AI) for m in range(4)
+                ), self.players[k].ptype != 0) for m in range(4)
             )
 
     def won(self):
         print(f'Game finished. Player {self.turn_to.idt} won\n', self.grid)
         raise SystemExit()
+
+    def killMinMax(self):
+        if self.minmax_thread is not None:
+            self.kill_thread = True
+            while self.minmax_thread is not None:
+                time.sleep(.5)
 
     def getAligned(self, player):
         longest_line = 1
@@ -329,7 +356,7 @@ class Teeko:
         if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
             player = self.turn_to
             if not player.has_played:
-                if player.AI and self.minmax_thread is None:
+                if player.ptype != 0 and self.minmax_thread is None:
                     self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
                     self.minmax_thread.start()
             else:
