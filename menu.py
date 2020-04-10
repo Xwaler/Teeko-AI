@@ -32,12 +32,8 @@ class Menu:
         self.title_rect = self.title.get_rect()
         self.title_rect.center = (SCREEN_SIZE[0] / 2, 180)
 
-        self.INDEX_COLOR_ONE = 0
-        self.INDEX_COLOR_TWO = 1
         self.index_difficulty_one = 0
         self.index_difficulty_two = 0
-        self.player_one_type = 0
-        self.player_two_type = 0
 
         self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
                                           COLORS[self.INDEX_COLOR_ONE])
@@ -77,6 +73,9 @@ class Menu:
         self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
 
+        self.playerone = Player(1,0, 0)
+        self.playertwo = Player(2,0, 1)
+
     def parse_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
@@ -101,52 +100,52 @@ class Menu:
                 self.AI_diff_two.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two]
 
             if self.tick_zone_one.on_button(pos):
-                if self.player_one_type < 2:
-                    self.player_one_type += 1
+                if self.player_one.type < 2:
+                    self.player_one.type += 1
                     self.AI_diff_one.able()
                 else:
-                    self.player_one_type = 0
+                    self.player_one.type = 0
                     self.AI_diff_one.disable()
 
-                self.tick_zone_one.text = PLAYERTYPE[self.player_one_type]
+                self.tick_zone_one.text = PLAYERTYPE[self.player_one.type]
 
             if self.tick_zone_two.on_button(pos):
-                if self.player_two_type<2:
-                    self.player_two_type +=1
+                if self.player_two.type<2:
+                    self.player_two.type +=1
                     self.AI_diff_two.able()
                 else:
-                    self.player_two_type = 0
+                    self.player_two.type = 0
                     self.AI_diff_two.disable()
 
-                self.tick_zone_two.text = PLAYERTYPE[self.player_two_type]
+                self.tick_zone_two.text = PLAYERTYPE[self.player_two.type]
 
             if self.leave_btn.on_button(pos):
                 pygame.quit()
                 quit()
 
             if self.color_btn_one.changeColor(pos):
-                if self.INDEX_COLOR_ONE + 1 < len(COLORS):
-                    if self.INDEX_COLOR_ONE + 1 != self.INDEX_COLOR_TWO:
-                        self.INDEX_COLOR_ONE += 1
+                if self.player_one.colorindex + 1 < len(COLORS):
+                    if self.player_one.colorindex + 1 != self.player_two.colorindex:
+                        self.player_one.colorindex += 1
                     else:
-                        self.INDEX_COLOR_ONE += 2
+                        self.player_one.colorindex += 2
                 else:
-                    if self.INDEX_COLOR_TWO == 0:
-                        self.INDEX_COLOR_ONE = 1
+                    if self.player_two.colorindex == 0:
+                        self.player_one.colorindex = 1
                     else:
-                        self.INDEX_COLOR_ONE = 0
+                        self.player_one.colorindex = 0
 
             if self.color_btn_two.changeColor(pos):
-                if self.INDEX_COLOR_TWO + 1 < len(COLORS):
-                    if self.INDEX_COLOR_TWO + 1 != self.INDEX_COLOR_ONE:
-                        self.INDEX_COLOR_TWO += 1
+                if self.player_two.colorindex + 1 < len(COLORS):
+                    if self.player_two.colorindex + 1 != self.player_one.colorindex:
+                        self.player_two.colorindex += 1
                     else:
-                        self.INDEX_COLOR_TWO += 2
+                        self.player_two.colorindex += 2
                 else:
-                    if self.INDEX_COLOR_ONE == 0:
-                        self.INDEX_COLOR_TWO = 1
+                    if self.player_one.colorindex == 0:
+                        self.player_two.colorindex = 1
                     else:
-                        self.INDEX_COLOR_TWO = 0
+                        self.player_two.colorindex = 0
 
     def render(self):
         self.surf.fill(BACKGROUND)
