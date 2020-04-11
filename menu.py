@@ -40,10 +40,10 @@ class Menu:
         self.playertwo = Player(2, 1, 1)
 
         self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
-                                          COLORS[self.playerone.colorindex])
+                                          COLORS[self.playerone.color_index])
         self.color_btn_two = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2 + 550), int((SCREEN_SIZE[1] - 30) / 2 + 30),
                                           30,
-                                          COLORS[self.playertwo.colorindex])
+                                          COLORS[self.playertwo.color_index])
 
         self.tick_zone_one = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
                                     PLAYERTYPE[self.playerone.ptype],
@@ -124,28 +124,28 @@ class Menu:
                 quit()
 
             if self.color_btn_one.changeColor(pos):
-                if self.playerone.colorindex + 1 < len(COLORS):
-                    if self.playerone.colorindex + 1 != self.playertwo.colorindex:
-                        self.playerone.colorindex += 1
+                if self.playerone.color_index + 1 < len(COLORS):
+                    if self.playerone.color_index + 1 != self.playertwo.color_index:
+                        self.playerone.color_index += 1
                     else:
-                        self.playerone.colorindex += 2
+                        self.playerone.color_index += 2
                 else:
-                    if self.playertwo.colorindex == 0:
-                        self.playerone.colorindex = 1
+                    if self.playertwo.color_index == 0:
+                        self.playerone.color_index = 1
                     else:
-                        self.playerone.colorindex = 0
+                        self.playerone.color_index = 0
 
             if self.color_btn_two.changeColor(pos):
-                if self.playertwo.colorindex + 1 < len(COLORS):
-                    if self.playertwo.colorindex + 1 != self.playerone.colorindex:
-                        self.playertwo.colorindex += 1
+                if self.playertwo.color_index + 1 < len(COLORS):
+                    if self.playertwo.color_index + 1 != self.playerone.color_index:
+                        self.playertwo.color_index += 1
                     else:
-                        self.playertwo.colorindex += 2
+                        self.playertwo.color_index += 2
                 else:
-                    if self.playerone.colorindex == 0:
-                        self.playertwo.colorindex = 1
+                    if self.playerone.color_index == 0:
+                        self.playertwo.color_index = 1
                     else:
-                        self.playertwo.colorindex = 0
+                        self.playertwo.color_index = 0
 
     def render(self):
         self.surf.fill(BACKGROUND)
@@ -171,8 +171,8 @@ class Menu:
 
         self.tick_zone_one.drawRect(self.surf)
         self.tick_zone_two.drawRect(self.surf)
-        self.color_btn_one.drawCircle(self.surf, COLORS[self.playerone.colorindex])
-        self.color_btn_two.drawCircle(self.surf, COLORS[self.playertwo.colorindex])
+        self.color_btn_one.drawCircle(self.surf, COLORS[self.playerone.color_index])
+        self.color_btn_two.drawCircle(self.surf, COLORS[self.playertwo.color_index])
 
         self.surf.blit(self.title, self.title_rect)
         self.surf.blit(self.player_one, self.player_one_rect)

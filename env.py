@@ -10,28 +10,13 @@ from tools import randomChoice
 from views import Plate, TokenView, Button
 
 
-class Token:
-    def __init__(self, player, pos):
-        self.pos = np.array(pos)
-        self.player = player
-
-    def move(self, direction):
-        self.pos += direction
-
-    def __str__(self):
-        return self.pos.__str__()
-
-    def __repr__(self):
-        return self.player.__repr__()
-
-
 class Player:
     def __init__(self, i, ptype, color):
         self.idt = i
         self.ptype = ptype
         self.tokens = []
         self.has_played = False
-        self.colorindex = color
+        self.color_index = color
 
     def __repr__(self):
         return self.idt.__repr__()
@@ -66,7 +51,7 @@ class Teeko:
         pass
 
     def reset(self, players=None, index_difficulty=(1, 1)):
-        self.grid = np.empty((GRID_SIZE, GRID_SIZE), dtype=Token)
+        self.grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=np.int)
         self.index_difficulty = index_difficulty
         if players is not None:
             self.players = players
@@ -137,31 +122,23 @@ class Teeko:
         longest_line = 1
         for token in player.tokens:
             for direction in DIRECTIONS:
-                if not (direction == (-1, -1) and (np.abs(token.pos[0] - token.pos[1]) > 1) or
-                        direction == (-1, 1) and (token.pos[0] + token.pos[1] > 5 or token.pos[0] + token.pos[1] < 3)):
+                if not (direction == [-1, -1] and (np.abs(token[0] - token[1]) > 1) or
+                        direction == [-1, 1] and (sum(token) > 5 or sum(token) < 3)):
 
                     current_alignment = 1
 
-                    new_line = token.pos[0] + direction[0]
-                    new_column = token.pos[1] + direction[1]
+                    new_pos = np.array(token) + direction
 
-                    while (0 <= new_line < 5 and 0 <= new_column < 5 and self.grid[new_line][new_column] is not None and
-                           self.grid[new_line][new_column].player.idt == self.grid[token.pos[0]][
-                               token.pos[1]].player.idt):
-                        new_line = new_line + direction[0]
-                        new_column = new_column + direction[1]
-
+                    while ((0 <= new_pos).all() and (new_pos < 5).all() and
+                           self.grid[new_pos[0]][new_pos[1]] == self.grid[token[0]][token[1]]):
+                        new_pos += direction
                         current_alignment += 1
 
-                    new_line = token.pos[0] - direction[0]
-                    new_column = token.pos[1] - direction[1]
+                    new_pos = np.array(token) - direction
 
-                    while (0 <= new_line < 5 and 0 <= new_column < 5 and self.grid[new_line][new_column] is not None and
-                           self.grid[new_line][new_column].player.idt == self.grid[token.pos[0]][
-                               token.pos[1]].player.idt):
-                        new_line = new_line - direction[0]
-                        new_column = new_column - direction[1]
-
+                    while ((0 <= new_pos).all() and (new_pos < 5).all() and
+                           self.grid[new_pos[0]][new_pos[1]] == self.grid[token[0]][token[1]]):
+                        new_pos -= direction
                         current_alignment += 1
 
                     if current_alignment > longest_line:
@@ -170,34 +147,37 @@ class Teeko:
         return longest_line
 
     def addToken(self, player, pos):
-        token = Token(player, pos)
-        self.grid[pos[0]][pos[1]] = token
-        player.tokens.append(token)
+        self.grid[pos[0]][pos[1]] = player.idt
+        player.tokens.append(pos)
 
     def removeToken(self, player, pos):
-        self.grid[pos[0]][pos[1]] = None
+        self.grid[pos[0]][pos[1]] = 0
 
         for token in player.tokens:
-            if token.pos[0] == pos[0] and token.pos[1] == pos[1]:
+            if token == pos:
                 player.tokens.remove(token)
                 break
 
-    def moveToken(self, token, direction):
-        self.grid[token.pos[0]][token.pos[1]] = None
-        self.grid[token.pos[0] + direction[0]][token.pos[1] + direction[1]] = token
-        token.move(direction)
+    def moveToken(self, player, pos, direction):
+        self.grid[pos[0]][pos[1]] = 0
+        self.grid[pos[0] + direction[0]][pos[1] + direction[1]] = player.idt
+
+        for i, token in enumerate(player.tokens):
+            if token == pos:
+                player.tokens[i] = [a + b for a, b in zip(pos, direction)]
+                break
 
     def getPossibleMove(self, token):
         token_moves = []
 
         for shift in SURROUNDING:
-            if 0 <= token.pos[0] + shift[0] < 5 and 0 <= token.pos[1] + shift[1] < 5 and \
-                    self.grid[token.pos[0] + shift[0]][token.pos[1] + shift[1]] is None:
-                token_moves.append([1, token.pos.tolist(), shift])
+            if 0 <= token[0] + shift[0] < 5 and 0 <= token[1] + shift[1] < 5 and \
+                    self.grid[token[0] + shift[0]][token[1] + shift[1]] == 0:
+                token_moves.append([1, token, shift])
 
-            if 0 <= token.pos[0] - shift[0] < 5 and 0 <= token.pos[1] - shift[1] < 5 and \
-                    self.grid[token.pos[0] - shift[0]][token.pos[1] - shift[1]] is None:
-                token_moves.append([1, token.pos.tolist(), [-shift[0], -shift[1]]])
+            if 0 <= token[0] - shift[0] < 5 and 0 <= token[1] - shift[1] < 5 and \
+                    self.grid[token[0] - shift[0]][token[1] - shift[1]] == 0:
+                token_moves.append([1, token, [-shift[0], -shift[1]]])
 
         return token_moves
 
@@ -214,7 +194,7 @@ class Teeko:
         positions = []
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
-                if self.grid[j][i] is None:
+                if self.grid[j][i] == 0:
                     positions.append([j, i])
         return positions
 
@@ -255,7 +235,7 @@ class Teeko:
                 if move[0] == 0:
                     self.addToken(player, move[1])
                 else:
-                    self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
+                    self.moveToken(player, move[1], move[2])
 
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
                 # print("score : ", score)
@@ -263,8 +243,7 @@ class Teeko:
                 if move[0] == 0:
                     self.removeToken(player, move[1])
                 else:
-                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                                   [-move[2][0], -move[2][1]])
+                    self.moveToken(player, [a + b for a, b in zip(move[1], move[2])], [-move[2][0], -move[2][1]])
 
                 if score > max_score:
                     max_score = score
@@ -291,7 +270,7 @@ class Teeko:
                 if move[0] == 0:
                     self.addToken(player, move[1])
                 else:
-                    self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
+                    self.moveToken(player, move[1], move[2])
 
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
                 # print("score : ", score)
@@ -299,8 +278,7 @@ class Teeko:
                 if move[0] == 0:
                     self.removeToken(player, move[1])
                 else:
-                    self.moveToken(self.grid[move[1][0] + move[2][0]][move[1][1] + move[2][1]],
-                                   [-move[2][0], -move[2][1]])
+                    self.moveToken(player, [a + b for a, b in zip(move[1], move[2])], [-move[2][0], -move[2][1]])
                 # print("score : ", score)
 
                 if score < min_score:
@@ -333,7 +311,7 @@ class Teeko:
                         break
 
         else:
-            self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
+            self.moveToken(self.turn_to, move[1], move[2])
 
             if self.render_enabled:
                 current_drop_zone, future_drop_zone, i = None, None, 0
@@ -358,7 +336,7 @@ class Teeko:
         self.minmax_thread = None
 
     def AI_handler(self):
-        print('Grid before : \n', self.grid)
+        print('\nGrid before : \n', self.grid)
         score, move = self.minMax(MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]], -np.inf, np.inf, self.turn_to)
         print('Score : ', score, ' | Selected move : ', move)
         self.makeMove(move)
@@ -409,9 +387,9 @@ class Teeko:
         self.plate.render()
         for token_view in self.players_tokens:
             if token_view[0] == 1:
-                token_view[2].render(COLORS[self.players[0].colorindex])
+                token_view[2].render(COLORS[self.players[0].color_index])
             elif token_view[0] == 2:
-                token_view[2].render(COLORS[self.players[1].colorindex])
+                token_view[2].render(COLORS[self.players[1].color_index])
 
     def parseEvent(self, event):
         pos = pygame.mouse.get_pos()
@@ -437,10 +415,10 @@ class Teeko:
                                 current_drop_zone = iter_drop_zone
                             i += 1
                         if current_drop_zone is not None:
-                            self.removeToken(self.turn_to, (current_drop_zone.ordonne, current_drop_zone.abscisse))
+                            self.removeToken(self.turn_to, [current_drop_zone.ordonne, current_drop_zone.abscisse])
                             current_drop_zone.available = True
 
-                        self.addToken(self.turn_to, (drop_zone.ordonne, drop_zone.abscisse))
+                        self.addToken(self.turn_to, [drop_zone.ordonne, drop_zone.abscisse])
                         self.selected_token.placeToken((drop_zone.x, drop_zone.y))
                         drop_zone.available = False
 
