@@ -76,14 +76,14 @@ class Menu:
         self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
 
-    def parse_event(self, event):
+    def parseEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
 
             if self.start_btn.on_button(pos):
                 return CODE_TO_GAME
 
-            if self.AI_diff_one.on_button(pos) and not self.AI_diff_one.isDisable():
+            if self.AI_diff_one.on_button(pos) and not self.AI_diff_one.isDisabled():
                 if self.index_difficulty_one < 2:
                     self.index_difficulty_one += 1
                 else:
@@ -91,7 +91,7 @@ class Menu:
 
                 self.AI_diff_one.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one]
 
-            if self.AI_diff_two.on_button(pos) and not self.AI_diff_two.isDisable():
+            if self.AI_diff_two.on_button(pos) and not self.AI_diff_two.isDisabled():
                 if self.index_difficulty_two < 2:
                     self.index_difficulty_two += 1
                 else:
@@ -102,7 +102,7 @@ class Menu:
             if self.tick_zone_one.on_button(pos):
                 if self.playerone.ptype < 2:
                     self.playerone.ptype += 1
-                    self.AI_diff_one.able()
+                    self.AI_diff_one.enable()
                 else:
                     self.playerone.ptype = 0
                     self.AI_diff_one.disable()
@@ -112,7 +112,7 @@ class Menu:
             if self.tick_zone_two.on_button(pos):
                 if self.playertwo.ptype < 2:
                     self.playertwo.ptype += 1
-                    self.AI_diff_two.able()
+                    self.AI_diff_two.enable()
                 else:
                     self.playertwo.ptype = 0
                     self.AI_diff_two.disable()
@@ -154,12 +154,12 @@ class Menu:
         else:
             self.start_btn.drawRect(self.surf)
 
-        if self.AI_diff_one.get_rect().collidepoint(pygame.mouse.get_pos()) and not self.AI_diff_one.isDisable():
+        if self.AI_diff_one.get_rect().collidepoint(pygame.mouse.get_pos()) and not self.AI_diff_one.isDisabled():
             self.AI_diff_one.hover(self.surf)
         else:
             self.AI_diff_one.drawRect(self.surf)
 
-        if self.AI_diff_two.get_rect().collidepoint(pygame.mouse.get_pos()) and not self.AI_diff_two.isDisable():
+        if self.AI_diff_two.get_rect().collidepoint(pygame.mouse.get_pos()) and not self.AI_diff_two.isDisabled():
             self.AI_diff_two.hover(self.surf)
         else:
             self.AI_diff_two.drawRect(self.surf)

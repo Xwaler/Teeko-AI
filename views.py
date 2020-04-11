@@ -114,10 +114,21 @@ class Button:
         self.bordercolor = GRAY
         self.textcolor = GRAY
 
-    def able(self):
+    def enable(self):
         self.bordercolor = BLACK
         self.disableVal = False
         self.textcolor = BLACK
 
-    def isDisable(self):
+    def isDisabled(self):
         return self.disableVal
+
+
+class PageManager:
+    def __init__(self):
+        self.current = None
+
+    def setPage(self, page):
+        self.current = page
+
+    def parseEvent(self, event):
+        self.current.parseEvent(event)

@@ -5,7 +5,7 @@ import pygame
 from constants import *
 from env import Teeko
 from menu import Menu
-from tools import PageManager
+from views import PageManager
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
                 game.killMinMax()
                 quit()
 
-            code = page_manager.current.parse_event(event)
+            code = page_manager.current.parseEvent(event)
 
             if code == CODE_TO_GAME:
                 game.reset(players=(menu.playerone, menu.playertwo),

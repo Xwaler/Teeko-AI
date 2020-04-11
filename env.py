@@ -5,6 +5,7 @@ import numpy as np
 import pygame
 
 from constants import *
+# from dqn import DQNAgent
 from tools import randomChoice
 from views import Plate, TokenView, Button
 
@@ -14,14 +15,14 @@ class Token:
         self.pos = np.array(pos)
         self.player = player
 
+    def move(self, direction):
+        self.pos += direction
+
     def __str__(self):
         return self.pos.__str__()
 
     def __repr__(self):
         return self.player.__repr__()
-
-    def move(self, direction):
-        self.pos += direction
 
 
 class Player:
@@ -37,14 +38,14 @@ class Player:
 
 
 class Teeko:
-    def __init__(self, surf):
+    def __init__(self, surf=None):
         self.surf = surf
+        self.render_enabled = surf is not None
         self.grid = None
         self.index_difficulty = None
         self.players = None
         self.turn_to = None
         self.players_tokens = None
-        self.end_last_turn = None
         self.minmax_thread = None
         self.kill_thread = False
         self.square_width = None
@@ -56,8 +57,13 @@ class Teeko:
         self.back_btn = None
         self.plate = None
         self.selected_token = None
-        self.offset_y = None
-        self.offset_x = None
+        self.selection_offset_y = None
+        self.selection_offset_x = None
+        self.dqnAgent = None
+
+    def loadDQN(self):
+        # self.dqnAgent = DQNAgent()
+        pass
 
     def reset(self, players=None, index_difficulty=(1, 1)):
         self.grid = np.empty((GRID_SIZE, GRID_SIZE), dtype=Token)
@@ -66,19 +72,35 @@ class Teeko:
             self.players = players
             for player in self.players:
                 player.tokens.clear()
+                if player.ptype == 2 and self.dqnAgent is None:
+                    self.loadDQN()
         else:
             self.players = [Player(i, 1, i - 1) for i in [1, 2]]
         self.turn_to = randomChoice(self.players)
 
         self.players_tokens = []
-        self.end_last_turn = 0
 
         self.minmax_thread = None
         self.kill_thread = False
 
         self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
 
+        for k in range(2):
+            self.players_tokens.extend(
+                (k + 1, m + 1, TokenView(
+                    self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
+                            k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
+                                                                     self.square_width * GRID_SIZE) / 2))),
+                    m * (TOKEN_RADIUS * 2 + 30) + 250
+                ), self.players[k].ptype != 0) for m in range(4)
+            )
+
+        if self.render_enabled:
+            self.initRender()
+
+    def initRender(self):
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
+
         self.player_one = self.font.render('Player 1', True, BLACK)
         self.player_one_rect = self.player_one.get_rect()
         self.player_one_rect.center = (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4), 150)
@@ -95,33 +117,24 @@ class Teeko:
                            (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
                            self.square_width * GRID_SIZE, self.square_width)
         self.selected_token = None
-        self.offset_y = 0
-        self.offset_x = 0
-
-        for k in range(2):
-            self.players_tokens.extend(
-                (k + 1, m + 1, TokenView(
-                    self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
-                            k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
-                                                                     self.square_width * GRID_SIZE) / 2))),
-                    m * (TOKEN_RADIUS * 2 + 30) + 250
-                ), self.players[k].ptype != 0) for m in range(4)
-            )
+        self.selection_offset_y = 0
+        self.selection_offset_x = 0
 
     def won(self):
         print(f'Game finished. Player {self.turn_to.idt} won\n', self.grid)
         raise SystemExit()
 
+    def calculating(self):
+        return self.minmax_thread is not None
+
     def killMinMax(self):
-        if self.minmax_thread is not None:
+        if self.calculating():
             self.kill_thread = True
-            while self.minmax_thread is not None:
+            while self.calculating():
                 time.sleep(.5)
 
     def getAligned(self, player):
         longest_line = 1
-        # TODO: ON PEUT PAS START A 0 PARTOUT ? HISTOIRE D'AVOIR LE SCORE = 0 SI L'AUTRE A PAS JOUE
-        #  CE QUI SPEEDERAIT LE PREMIER TOUR DE L'IA
         for token in player.tokens:
             for direction in DIRECTIONS:
                 if not (direction == (-1, -1) and (np.abs(token.pos[0] - token.pos[1]) > 1) or
@@ -153,12 +166,6 @@ class Teeko:
 
                     if current_alignment > longest_line:
                         longest_line = current_alignment
-                    # TODO: GUILLAUME QUESKECE ? ^ v
-                    if longest_line < current_alignment:
-                        longest_line = current_alignment
-
-                        if longest_line > 2:
-                            return longest_line
 
         return longest_line
 
@@ -214,7 +221,7 @@ class Teeko:
     def over(self):
         return max(self.getAligned(player) for player in self.players) >= 4
 
-    def get_score(self):
+    def getScore(self):
         p1 = self.getAligned(self.players[0])
         # print("p1 : ", p1)
         p2 = self.getAligned(self.players[1])
@@ -227,7 +234,7 @@ class Teeko:
             raise SystemExit()
 
         DEPTH_IS_ZERO = depth == 0
-        DEPTH_IS_MAX = depth == MAX_DEPTH[self.index_difficulty[0]]
+        DEPTH_IS_MAX = depth == MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]]
 
         # print("\n\ndepth : ", depth)
 
@@ -238,7 +245,7 @@ class Teeko:
         # print("move : ", move)
 
         if DEPTH_IS_ZERO or self.over():
-            return self.get_score() * (1 + (.25 * depth))
+            return self.getScore() * (1 + (.25 * depth))
 
         if player.idt == 1:
             max_score = -np.inf
@@ -313,58 +320,80 @@ class Teeko:
                 print('Min: ', min_score_moves)
                 return min_score, randomChoice(min_score_moves)
 
-    def AI_handler(self, player):
-        print(self.grid)
-        score, move = self.minMax(MAX_DEPTH[self.index_difficulty[0]], -np.inf, np.inf, player)
-        print('Score : ', score, ' | Selected move : ', move)
-        AI_tokens = [token for token in self.players_tokens if token[0] == player.idt]
+    def makeMove(self, move):
+        AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
 
         if move[0] == 0:
-            self.addToken(player, move[1])
-            for drop_zones in self.plate.playable_zones:
-                if drop_zones.abscisse == move[1][1] and drop_zones.ordonne == move[1][0]:
-                    drop_zones.available = False
-                    AI_tokens[len(player.tokens) - 1][2].placeToken((drop_zones.x, drop_zones.y))
-                    break
+            self.addToken(self.turn_to, move[1])
+            if self.render_enabled:
+                for drop_zones in self.plate.playable_zones:
+                    if drop_zones.abscisse == move[1][1] and drop_zones.ordonne == move[1][0]:
+                        drop_zones.available = False
+                        AI_tokens[len(self.turn_to.tokens) - 1][2].placeToken((drop_zones.x, drop_zones.y))
+                        break
 
         else:
-            current_drop_zone, future_drop_zone, i = None, None, 0
-            while current_drop_zone is None or future_drop_zone is None:
-                drop_zone = self.plate.playable_zones[i]
-                if current_drop_zone is None and \
-                        drop_zone.abscisse == move[1][1] and drop_zone.ordonne == move[1][0]:
-                    current_drop_zone = drop_zone
-                if future_drop_zone is None and \
-                        drop_zone.abscisse == move[1][1] + move[2][1] and drop_zone.ordonne == move[1][0] + move[2][0]:
-                    future_drop_zone = drop_zone
-                i += 1
+            self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
 
-            current_drop_zone.available = True
-            for token in AI_tokens:
-                if token[2].initial_x == current_drop_zone.x and token[2].initial_y == current_drop_zone.y:
-                    self.moveToken(self.grid[move[1][0]][move[1][1]], move[2])
-                    token[2].placeToken((future_drop_zone.x, future_drop_zone.y))
-                    future_drop_zone.available = False
-                    break
+            if self.render_enabled:
+                current_drop_zone, future_drop_zone, i = None, None, 0
+                while current_drop_zone is None or future_drop_zone is None:
+                    drop_zone = self.plate.playable_zones[i]
+                    if current_drop_zone is None and drop_zone.abscisse == move[1][1] and \
+                            drop_zone.ordonne == move[1][0]:
+                        current_drop_zone = drop_zone
+                    if future_drop_zone is None and drop_zone.abscisse == move[1][1] + move[2][1] and \
+                            drop_zone.ordonne == move[1][0] + move[2][0]:
+                        future_drop_zone = drop_zone
+                    i += 1
 
-        self.end_last_turn = time.time()
+                current_drop_zone.available = True
+                for token in AI_tokens:
+                    if token[2].initial_x == current_drop_zone.x and token[2].initial_y == current_drop_zone.y:
+                        token[2].placeToken((future_drop_zone.x, future_drop_zone.y))
+                        future_drop_zone.available = False
+                        break
+
+        self.turn_to.has_played = True
         self.minmax_thread = None
-        player.has_played = True
+
+    def AI_handler(self):
+        print('Grid before : \n', self.grid)
+        score, move = self.minMax(MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]], -np.inf, np.inf, self.turn_to)
+        print('Score : ', score, ' | Selected move : ', move)
+        self.makeMove(move)
 
     def update(self):
-        # print(self.turn_to, self.turn_to.AI)
-        if time.time() > self.end_last_turn + 1:  # TEMPORAIRE : waits about a sec between turns
-            player = self.turn_to
-            if not player.has_played:
-                if player.ptype != 0 and self.minmax_thread is None:
-                    self.minmax_thread = threading.Thread(target=self.AI_handler, args=(player,))
-                    self.minmax_thread.start()
-            else:
-                if self.over():
-                    self.won()
+        if not self.turn_to.has_played:
+            if self.turn_to.ptype == 1 and not self.calculating():
+                self.minmax_thread = threading.Thread(target=self.AI_handler)
+                self.minmax_thread.start()
 
-                self.turn_to = self.players[abs(player.idt - 2)]
-                player.has_played = False
+            elif self.turn_to.ptype == 2:
+                # preds = self.dqnAgent.predict(self.getState())
+                # move = self.predsToMove(preds)
+                # self.makeMove(move)
+                pass
+
+        else:
+            if self.over():
+                self.won()
+
+            self.turn_to.has_played = False
+            self.turn_to = self.players[abs(self.turn_to.idt - 2)]
+
+    def getState(self):
+        # TODO: RETURNS AN ARRAY REPRESENTATION OF THE GAME STATE
+        pass
+
+    def predsToMove(self, preds):
+        # TODO: CONVERTS AN ARRAY OF PROBABILITIES TO A MOVE
+        pass
+
+    def moveToPreds(self, move):
+        # TODO: CONVERTS A MOVE TO A PERFECT ARRAY WITH THE SHAPE OF THE NETWORK'S OUTPUT,
+        #  MUST REPRESENT THE OBJECTIVE THAT THE NETWORK MUST ACHIEVE
+        pass
 
     def render(self):
         self.surf.fill(BACKGROUND)
@@ -384,7 +413,7 @@ class Teeko:
             elif token_view[0] == 2:
                 token_view[2].render(COLORS[self.players[1].colorindex])
 
-    def parse_event(self, event):
+    def parseEvent(self, event):
         pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.back_btn.on_button(pos):
@@ -393,8 +422,8 @@ class Teeko:
             for token_view in self.players_tokens:
                 if token_view[2].on_token(pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
                     self.selected_token = token_view[2]
-                    self.offset_x = token_view[2].x - pos[0]
-                    self.offset_y = token_view[2].y - pos[1]
+                    self.selection_offset_x = token_view[2].x - pos[0]
+                    self.selection_offset_y = token_view[2].y - pos[1]
 
         if event.type == pygame.MOUSEBUTTONUP:
             if self.selected_token is not None:
@@ -425,9 +454,7 @@ class Teeko:
 
         if event.type == pygame.MOUSEMOTION:
             if self.selected_token is not None:
-                newX = self.offset_x + pos[0]
-                newY = self.offset_y + pos[1]
-                self.selected_token.drag((newX, newY))
+                self.selected_token.drag((self.selection_offset_x + pos[0], self.selection_offset_y + pos[1]))
 
     def print(self):
         print(self.grid)
