@@ -73,9 +73,10 @@ class Teeko:
         for k in range(2):
             self.players_tokens.extend(
                 (k + 1, m + 1, TokenView(
-                    self.surf, (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
-                            k * int(self.square_width * GRID_SIZE + (SCREEN_SIZE[0] -
-                                                                     self.square_width * GRID_SIZE) / 2))),
+                    self.surf,
+                    int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
+                            k * int(
+                        self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2)),
                     m * (TOKEN_RADIUS * 2 + 30) + 250
                 ), self.players[k].ptype != 0) for m in range(4)
             )
@@ -119,22 +120,23 @@ class Teeko:
                 time.sleep(.5)
 
     def getAligned(self, player):
-        longest_line = 1
+        longest_line, times = 1, 1
+        new_pos = np.empty(2, dtype=np.int)
         for token in player.tokens:
-            for direction in DIRECTIONS:
-                if not (direction == [-1, -1] and (np.abs(token[0] - token[1]) > 1) or
+            for direction in SURROUNDING:
+                if not (direction == [-1, -1] and (abs(token[0] - token[1]) > 1) or
                         direction == [-1, 1] and (sum(token) > 5 or sum(token) < 3)):
 
                     current_alignment = 1
 
-                    new_pos = np.array(token) + direction
+                    new_pos[:] = [a + b for a, b in zip(token, direction)]
 
                     while ((0 <= new_pos).all() and (new_pos < 5).all() and
                            self.grid[new_pos[0]][new_pos[1]] == self.grid[token[0]][token[1]]):
                         new_pos += direction
                         current_alignment += 1
 
-                    new_pos = np.array(token) - direction
+                    new_pos[:] = [a - b for a, b in zip(token, direction)]
 
                     while ((0 <= new_pos).all() and (new_pos < 5).all() and
                            self.grid[new_pos[0]][new_pos[1]] == self.grid[token[0]][token[1]]):
@@ -143,8 +145,11 @@ class Teeko:
 
                     if current_alignment > longest_line:
                         longest_line = current_alignment
+                        times = 1
+                    elif current_alignment > 1 and current_alignment == longest_line:
+                        times += 1
 
-        return longest_line
+        return longest_line, times // longest_line
 
     def addToken(self, player, pos):
         self.grid[pos[0]][pos[1]] = player.idt
@@ -169,23 +174,28 @@ class Teeko:
 
     def getPossibleMove(self, token):
         token_moves = []
+        token_cpy = np.empty(2, dtype=np.int)
 
         for shift in SURROUNDING:
-            if 0 <= token[0] + shift[0] < 5 and 0 <= token[1] + shift[1] < 5 and \
-                    self.grid[token[0] + shift[0]][token[1] + shift[1]] == 0:
+            token_cpy[:] = token
+
+            token_plus = token_cpy + shift
+            if (0 <= token_plus).all() and (token_plus < 5).all() and \
+                    self.grid[token_plus[0]][token_plus[1]] == 0:
                 token_moves.append([1, token, shift])
 
-            if 0 <= token[0] - shift[0] < 5 and 0 <= token[1] - shift[1] < 5 and \
-                    self.grid[token[0] - shift[0]][token[1] - shift[1]] == 0:
+            token_minus = token_cpy - shift
+            if (0 <= token_minus).all() and (token_minus < 5).all() and \
+                    self.grid[token_minus[0]][token_minus[1]] == 0:
                 token_moves.append([1, token, [-shift[0], -shift[1]]])
 
         return token_moves
 
     def getAllMoves(self, player):
-        moves = []
         if len(player.tokens) < 4:
-            moves.extend([[0, pos, [0, 0]] for pos in self.getAllEmpty()])
+            moves = [[0, pos, [0, 0]] for pos in self.getAllEmpty()]
         else:
+            moves = []
             for token in player.tokens:
                 moves.extend(self.getPossibleMove(token))
         return moves
@@ -199,14 +209,16 @@ class Teeko:
         return positions
 
     def over(self):
-        return max(self.getAligned(player) for player in self.players) >= 4
+        return max(self.getAligned(player)[0] for player in self.players) >= 4
 
     def getScore(self):
-        p1 = self.getAligned(self.players[0])
+        p1, t1 = self.getAligned(self.players[0])
+        w1 = 1.3 if self.turn_to.idt == 1 else 1.5
         # print("p1 : ", p1)
-        p2 = self.getAligned(self.players[1])
+        p2, t2 = self.getAligned(self.players[1])
+        w2 = 1.3 if self.turn_to.idt == 2 else 1.5
         # print("p2 : ", p2)
-        return (p1 ** 1.5) - (p2 ** 1.5)
+        return round(((p1 ** w1) - t1) - ((p2 ** w2) - t2), 4)
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, depth, alpha, beta, player):
@@ -252,7 +264,7 @@ class Teeko:
                 if score == max_score:
                     max_score_moves.append(move)
 
-                alpha = np.max([alpha, score])
+                alpha = max(alpha, score)
                 if beta <= alpha:
                     break
 
@@ -288,7 +300,7 @@ class Teeko:
                 if score == min_score:
                     min_score_moves.append(move)
 
-                beta = np.min([beta, score])
+                beta = min(beta, score)
                 if beta <= alpha:
                     break
 
