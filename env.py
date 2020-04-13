@@ -1,3 +1,4 @@
+import bisect
 import threading
 
 import numpy as np
@@ -138,7 +139,7 @@ class Teeko:
 
     def getAligned(self, player):
         longest_line = 1
-        for token in sorted(player.tokens, reverse=True):
+        for token in player.tokens:
             module_previous_pos = token % 5
             div_previous_pos = token // 5
             previous_pos = token
@@ -146,8 +147,8 @@ class Teeko:
             for direction in SURROUNDING:
                 current_alignment = 1
 
-                if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2 and (
-                        direction != 4 or 2 < module_previous_pos + div_previous_pos < 6)):
+                if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2) and (
+                        direction != 4 or 2 < module_previous_pos + div_previous_pos < 6):
 
                     new_pos = token + direction
                     idt = self.grid[token]
@@ -171,7 +172,7 @@ class Teeko:
 
     def addToken(self, player, pos):
         self.grid[pos] = player.idt
-        player.tokens.append(pos)
+        bisect.insort(player.tokens, pos)
 
     def removeToken(self, player, pos):
         self.grid[pos] = 0
@@ -188,6 +189,7 @@ class Teeko:
         for i, token in enumerate(player.tokens):
             if token == pos:
                 player.tokens[i] += direction
+                player.tokens.sort()
                 break
 
     def getPossibleMove(self, token):
@@ -379,7 +381,7 @@ class Teeko:
                     pass
 
             else:
-                print(self.getAligned(self.turn_to))
+                print(f'P{self.turn_to.idt} align : {self.getAligned(self.turn_to)}, tokens : {self.turn_to.tokens}')
 
                 if self.over():
                     self.won()
@@ -451,17 +453,18 @@ class Teeko:
             if self.back_btn.on_button(pos):
                 return CODE_TO_MENU
 
-            if self.gotomenu.on_button(pos):
-                return CODE_TO_MENU
+            if self.gameended:
+                if self.gotomenu.on_button(pos):
+                    return CODE_TO_MENU
 
-            if self.leavegame.on_button(pos):
-                pygame.quit()
-                self.killMinMax()
-                quit()
+                if self.leavegame.on_button(pos):
+                    pygame.quit()
+                    self.killMinMax()
+                    quit()
 
-            if self.retrybtn.on_button(pos):
-                self.gameended = False
-                return CODE_TO_GAME
+                if self.retrybtn.on_button(pos):
+                    self.gameended = False
+                    return CODE_TO_GAME
 
             for token_view in self.players_tokens:
                 if token_view[2].on_token(pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
