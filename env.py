@@ -25,7 +25,7 @@ class Teeko:
     def __init__(self, surf=None):
         self.surf = surf
         self.render_enabled = surf is not None
-        # self.grid = None
+        self.grid = None
         self.index_difficulty = None
         self.players = None
         self.turn_to = None
@@ -40,6 +40,11 @@ class Teeko:
         self.player_two_rect = None
         self.back_btn = None
         self.plate = None
+        self.winnerannouced = None
+        self.winnerannouced_rect = None
+        self.retrybtn = None
+        self.gotomenu = None
+        self.leavegame = None
         self.selected_token = None
         self.selection_offset_y = None
         self.selection_offset_x = None
@@ -104,11 +109,14 @@ class Teeko:
         self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
         self.winnerannouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
         self.winnerannouced_rect = self.winnerannouced.get_rect()
-        self.winnerannouced_rect.center = ((SCREEN_SIZE[0])/2, (SCREEN_SIZE[1] - 400) / 2 + 150)
+        self.winnerannouced_rect.center = ((SCREEN_SIZE[0]) / 2, (SCREEN_SIZE[1] - 400) / 2 + 150)
 
-        self.retrybtn = Button((SCREEN_SIZE[0]-700)/2, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50,'Retry', BACKGROUND)
-        self.gotomenu = Button((SCREEN_SIZE[0]-700)/2 + 275, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Go to Menu', BACKGROUND)
-        self.leavegame = Button((SCREEN_SIZE[0]-700)/2 + 550, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Quit', BACKGROUND)
+        self.retrybtn = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Retry',
+                               BACKGROUND)
+        self.gotomenu = Button((SCREEN_SIZE[0] - 700) / 2 + 275, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50,
+                               'Go to Menu', BACKGROUND)
+        self.leavegame = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Quit',
+                                BACKGROUND)
 
         self.selected_token = None
         self.selection_offset_y = 0
@@ -117,8 +125,7 @@ class Teeko:
     def won(self):
         self.gameended = True
         self.winnerannouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
-        print(f'Game finished. Player {self.turn_to.idt} won\n', self.grid)
-        #raise SystemExit()
+        print(f'Game finished. Player {self.turn_to.idt} won\n', self.rectGrid())
 
     def calculating(self):
         return self.minmax_thread is not None
@@ -130,47 +137,37 @@ class Teeko:
                 continue
 
     def getAligned(self, player):
-        longest_line, times = 1, 1
-        for token in player.tokens:
+        longest_line = 1
+        for token in sorted(player.tokens, reverse=True):
             module_previous_pos = token % 5
             div_previous_pos = token // 5
             previous_pos = token
+
             for direction in SURROUNDING:
                 current_alignment = 1
+
                 if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2 and (
                         direction != 4 or 2 < module_previous_pos + div_previous_pos < 6)):
 
                     new_pos = token + direction
+                    idt = self.grid[token]
 
-                    value = self.grid[token]
-
-                    while 0 <= new_pos < 25 and self.grid[new_pos] == value and (
-                            module_previous_pos != 0 and module_previous_pos != 4 or (previous_pos + new_pos) % 5 != 4):
-
+                    while 0 <= new_pos < 25 and self.grid[new_pos] == idt and (
+                            (module_previous_pos != 0 and module_previous_pos != 4) or
+                            (previous_pos + new_pos) % 5 != 4):
                         previous_pos = new_pos
                         module_previous_pos = previous_pos % 5
                         new_pos += direction
 
                         current_alignment += 1
 
-                    new_pos = token - direction
-
-                    while (0 <= new_pos < 25 and self.grid[new_pos] == value and (
-                            module_previous_pos != 0 and module_previous_pos != 4 or (previous_pos + new_pos) % 5 != 4)):
-
-                        previous_pos = new_pos
-                        module_previous_pos = previous_pos % 5
-                        new_pos -= direction
-
-                        current_alignment += 1
-
                     if current_alignment > longest_line:
                         longest_line = current_alignment
-                        times = 1
-                    elif current_alignment > 1 and current_alignment == longest_line:
-                        times += 1
 
-        return longest_line, times // longest_line
+                    if longest_line > 2:
+                        return longest_line
+
+        return longest_line
 
     def addToken(self, player, pos):
         self.grid[pos] = player.idt
@@ -190,7 +187,7 @@ class Teeko:
 
         for i, token in enumerate(player.tokens):
             if token == pos:
-                player.tokens[i] = pos + direction
+                player.tokens[i] += direction
                 break
 
     def getPossibleMove(self, token):
@@ -198,17 +195,11 @@ class Teeko:
         module_pos = token % 5
         SAFE_ZONE = (module_pos != 0 and module_pos != 4)
 
-        for shift in SURROUNDING:
-
+        for shift in DIRECTIONS:
             token_plus = token + shift
 
             if 0 <= token_plus < 25 and self.grid[token_plus] == 0 and (SAFE_ZONE or (token_plus + token) % 5 != 4):
                 token_moves.append([1, token, shift])
-
-            token_minus = token - shift
-
-            if 0 <= token_minus < 25 and self.grid[token_minus] == 0 and (SAFE_ZONE or (token_minus + token) % 5 != 4):
-                token_moves.append([1, token, -shift])
 
         return token_moves
 
@@ -222,23 +213,22 @@ class Teeko:
         return moves
 
     def getAllEmpty(self):
-        positions = []
-        for i in range(GRID_SIZE * GRID_SIZE):
-            if self.grid[i] == 0:
-                positions.append(i)
-        return positions
+        return np.where(self.grid == 0)[0]
 
-    def over(self):
-        return max(self.getAligned(player)[0] for player in self.players) >= 4
+    def over(self, align_score=None):
+        if align_score is not None:
+            return max(align_score) >= 4
+        else:
+            return max(self.getAligned(player) for player in self.players) >= 4
 
-    def getScore(self):
-        p1, t1 = self.getAligned(self.players[0])
+    def getScore(self, align_score=None):
+        if align_score is not None:
+            p1, p2 = align_score
+        else:
+            p1, p2 = (self.getAligned(player) for player in self.players)
         w1 = 1.3 if self.turn_to.idt == 1 else 1.5
-        # print("p1 : ", p1)
-        p2, t2 = self.getAligned(self.players[1])
         w2 = 1.3 if self.turn_to.idt == 2 else 1.5
-        # print("p2 : ", p2)
-        return round(((p1 ** w1) - t1) - ((p2 ** w2) - t2), 4)
+        return round((p1 ** w1) - (p2 ** w2), 4)
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, depth, alpha, beta, player):
@@ -257,8 +247,9 @@ class Teeko:
 
         # print("move : ", move)
 
-        if DEPTH_IS_ZERO or self.over():
-            return self.getScore() * (1 + (.25 * depth))
+        align_score = [self.getAligned(p) for p in self.players]
+        if DEPTH_IS_ZERO or self.over(align_score):
+            return self.getScore(align_score) * (1 + (.25 * depth))
 
         if player.idt == 1:
             max_score = -np.inf
@@ -369,31 +360,32 @@ class Teeko:
         self.minmax_thread = None
 
     def AI_handler(self):
-        print('\nGrid before : \n', self.grid)
+        print('\nGrid before : \n', self.rectGrid())
         score, move = self.minMax(MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]], -np.inf, np.inf, self.turn_to)
         print('Score : ', score, ' | Selected move : ', move)
         self.makeMove(move)
 
     def update(self):
-        if not self.turn_to.has_played:
-            if self.turn_to.ptype == 1 and not self.calculating():
-                self.minmax_thread = threading.Thread(target=self.AI_handler)
-                self.minmax_thread.start()
+        if not self.gameended:
+            if not self.turn_to.has_played:
+                if self.turn_to.ptype == 1 and not self.calculating():
+                    self.minmax_thread = threading.Thread(target=self.AI_handler)
+                    self.minmax_thread.start()
 
-            elif self.turn_to.ptype == 2:
-                # preds = self.dqnAgent.predict(self.getState())
-                # move = self.predsToMove(preds)
-                # self.makeMove(move)
-                pass
+                elif self.turn_to.ptype == 2:
+                    # preds = self.dqnAgent.predict(self.getState())
+                    # move = self.predsToMove(preds)
+                    # self.makeMove(move)
+                    pass
 
-        else:
-            print(self.getAligned(self.turn_to))
+            else:
+                print(self.getAligned(self.turn_to))
 
-            if self.over():
-                self.won()
+                if self.over():
+                    self.won()
 
-            self.turn_to.has_played = False
-            self.turn_to = self.players[abs(self.turn_to.idt - 2)]
+                self.turn_to.has_played = False
+                self.turn_to = self.players[abs(self.turn_to.idt - 2)]
 
     def getState(self):
         # TODO: RETURNS AN ARRAY REPRESENTATION OF THE GAME STATE
@@ -430,11 +422,11 @@ class Teeko:
             backgroundend = pygame.Surface(SCREEN_SIZE)
             backgroundend.fill(GRAY)
             backgroundend.set_alpha(150)
-            self.surf.blit(backgroundend,(0,0))
+            self.surf.blit(backgroundend, (0, 0))
 
             bandeau = pygame.Surface((SCREEN_SIZE[0], 400))
             bandeau.fill(BACKGROUND)
-            self.surf.blit(bandeau,(0,(SCREEN_SIZE[1]-400)/2))
+            self.surf.blit(bandeau, (0, (SCREEN_SIZE[1] - 400) / 2))
 
             if self.retrybtn.get_rect().collidepoint(pygame.mouse.get_pos()):
                 self.retrybtn.hover(self.surf)
@@ -464,7 +456,7 @@ class Teeko:
 
             if self.leavegame.on_button(pos):
                 pygame.quit()
-                game.killMinMax()
+                self.killMinMax()
                 quit()
 
             if self.retrybtn.on_button(pos):
@@ -508,5 +500,8 @@ class Teeko:
             if self.selected_token is not None:
                 self.selected_token.drag((self.selection_offset_x + pos[0], self.selection_offset_y + pos[1]))
 
+    def rectGrid(self):
+        return self.grid.reshape((GRID_SIZE, GRID_SIZE))
+
     def print(self):
-        print(self.grid)
+        print(self.rectGrid())
