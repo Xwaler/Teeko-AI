@@ -40,6 +40,7 @@ class PlayableZone:
 
     def render(self):
         pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS + 5, TOKEN_THICKNESS)
+        pygame.draw.circle(self.surf, BACKGROUND, (self.x, self.y), TOKEN_RADIUS + 4 - TOKEN_THICKNESS)
 
     def onPropzone(self, pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
@@ -69,6 +70,13 @@ class Plate:
 
     def render(self):
         pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.w), 3)
+        for j in range(GRID_SIZE):
+            for i in range(GRID_SIZE):
+                pygame.draw.line(self.surf,BLACK,(self.playable_zones[i + j*5].x, self.playable_zones[i + j*5].y), (self.playable_zones[len(self.playable_zones)-1-i*5 - j].x, self.playable_zones[len(self.playable_zones)-1-i*5 - j].y), 5)
+                pygame.draw.line(self.surf, BLACK, (self.playable_zones[i + j*5].x, self.playable_zones[i + j*5].y), (self.playable_zones[i + i * 4 +j ].x,self.playable_zones[i+ i * 4 +j ].y), 5)
+            pygame.draw.line(self.surf, BLACK, (self.playable_zones[j].x, self.playable_zones[j].y),(self.playable_zones[len(self.playable_zones)-5+j].x, self.playable_zones[len(self.playable_zones)-5+j].y), 5)
+            pygame.draw.line(self.surf, BLACK, (self.playable_zones[j*5].x, self.playable_zones[j*5].y), (self.playable_zones[4+j*5].x,self.playable_zones[4+j*5].y), 5)
+
 
         for playable_zone in self.playable_zones:
             playable_zone.render()
