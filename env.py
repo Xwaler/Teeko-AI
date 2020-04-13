@@ -145,22 +145,38 @@ class Teeko:
             previous_pos = token
 
             for direction in SURROUNDING:
-                current_alignment = 1
-
                 if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2) and (
                         direction != 4 or 2 < module_previous_pos + div_previous_pos < 6):
+
+                    current_alignment = 1
+                    space_used = False
 
                     new_pos = token + direction
                     idt = self.grid[token]
 
-                    while 0 <= new_pos < 25 and self.grid[new_pos] == idt and (
-                            (module_previous_pos != 0 and module_previous_pos != 4) or
-                            (previous_pos + new_pos) % 5 != 4):
-                        previous_pos = new_pos
-                        module_previous_pos = previous_pos % 5
-                        new_pos += direction
+                    while 0 <= new_pos < 25 \
+                            and ((module_previous_pos != 0 and module_previous_pos != 4) or
+                                 (previous_pos + new_pos) % 5 != 4) \
+                            and not (space_used and (self.grid[new_pos] == 0 or current_alignment > 2)):
 
-                        current_alignment += 1
+                        if self.grid[new_pos] == idt:
+                            previous_pos = new_pos
+                            module_previous_pos = previous_pos % 5
+                            new_pos += direction
+
+                            current_alignment += 1
+
+                        elif self.grid[new_pos] == 0:
+                            previous_pos = new_pos
+                            module_previous_pos = previous_pos % 5
+                            new_pos += direction
+
+                            space_used = True
+
+                        else:
+                            if current_alignment < 4:
+                                current_alignment = 1
+                            break
 
                     if current_alignment > longest_line:
                         longest_line = current_alignment
@@ -228,8 +244,7 @@ class Teeko:
             p1, p2 = align_score
         else:
             p1, p2 = (self.getAligned(player) for player in self.players)
-        w1 = 1.3 if self.turn_to.idt == 1 else 1.5
-        w2 = 1.3 if self.turn_to.idt == 2 else 1.5
+        w1, w2 = (1.3, 1.5) if self.turn_to.idt == 1 else (1.5, 1.3)
         return round((p1 ** w1) - (p2 ** w2), 4)
 
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
