@@ -1,6 +1,8 @@
 GRID_SIZE = 5
-DIRECTIONS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
-SURROUNDING = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
+DIRECTIONS2 = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
+DIRECTIONS = [-6, -5, -4, -1, 1, 4, 5, 6]
+SURROUNDING2 = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
+SURROUNDING = [1, 4, 5, 6]
 TOKEN_NUMBER = 4
 
 DIFFICULTY = ['Easy', 'Normal', 'Hard']
