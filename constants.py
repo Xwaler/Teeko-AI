@@ -1,7 +1,12 @@
 GRID_SIZE = 5
+TOKEN_NUMBER = 4
+
 DIRECTIONS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
 SURROUNDING = [[-1, -1], [-1, 0], [-1, 1], [0, -1]]
-TOKEN_NUMBER = 4
+
+ALIGNEMENTS = {4: [[1, 1, 1, 1, -1]],
+               3: [[1, 1, 1, 0, -1], [0, 1, 1, 1, -1], [-1, 1, 1, 1, 0], [1, 0, 1, 1, -1], [1, 1, 0, 1, -1]],
+               2: [[1, 1, -1, -1, -1], [-1, 1, 1, -1, -1]]}
 
 DIFFICULTY = ['Easy', 'Normal', 'Hard']
 PLAYERTYPE = ['Humain', 'AI', 'Learning']

@@ -1,5 +1,4 @@
 import threading
-import time
 
 import numpy as np
 import pygame
@@ -71,14 +70,12 @@ class Teeko:
         self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
 
         for k in range(2):
+            x = int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (k * int(
+                self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2
+            ))
             self.players_tokens.extend(
-                (k + 1, m + 1, TokenView(
-                    self.surf,
-                    int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (
-                            k * int(
-                        self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2)),
-                    m * (TOKEN_RADIUS * 2 + 30) + 250
-                ), self.players[k].ptype != 0) for m in range(4)
+                (k + 1, m + 1, TokenView(self.surf, x, m * (TOKEN_RADIUS * 2 + 30) + 250),
+                 self.players[k].ptype != 0) for m in range(4)
             )
 
         if self.render_enabled:
@@ -117,7 +114,7 @@ class Teeko:
         if self.calculating():
             self.kill_thread = True
             while self.calculating():
-                time.sleep(.5)
+                continue
 
     def getAligned(self, player):
         longest_line, times = 1, 1
@@ -223,6 +220,7 @@ class Teeko:
     #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
     def minMax(self, depth, alpha, beta, player):
         if self.kill_thread:
+            self.minmax_thread = None
             raise SystemExit()
 
         DEPTH_IS_ZERO = depth == 0
@@ -366,6 +364,8 @@ class Teeko:
                 pass
 
         else:
+            print(self.getAligned(self.turn_to))
+
             if self.over():
                 self.won()
 
