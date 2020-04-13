@@ -8,21 +8,25 @@ from views import Button
 
 
 class ColorChanger:
-    def __init__(self, x, y, r, color):
+    def __init__(self,screen, x, y, r, color):
+        self.surf = screen
         self.x = x
         self.y = y
         self.r = r
         self.color = color
 
-    def drawCircle(self, screen, color):
-        pygame.draw.circle(screen, BLACK, (self.x, self.y), self.r)
-        pygame.draw.circle(screen, color, (self.x, self.y), self.r - 2)
+    def drawCircle(self, color):
+        pygame.draw.circle(self.surf, BLACK, (self.x, self.y), self.r)
+        pygame.draw.circle(self.surf, color, (self.x, self.y), self.r - 2)
 
-    def changeColor(self, pos):
+    def is_inside(self,pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= self.r:
             return True
         return False
 
+    def hover(self,color):
+        pygame.draw.circle(self.surf, BLACK, (self.x, self.y), self.r)
+        pygame.draw.circle(self.surf, color, (self.x, self.y), self.r - 4)
 
 class Menu:
     def __init__(self, surf):
@@ -39,9 +43,9 @@ class Menu:
         self.playerone = Player(1, 0, 0)
         self.playertwo = Player(2, 1, 1)
 
-        self.color_btn_one = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
+        self.color_btn_one = ColorChanger(self.surf,int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
                                           COLORS[self.playerone.color_index])
-        self.color_btn_two = ColorChanger(int((SCREEN_SIZE[0] - 700) / 2 + 550), int((SCREEN_SIZE[1] - 30) / 2 + 30),
+        self.color_btn_two = ColorChanger(self.surf,int((SCREEN_SIZE[0] - 700) / 2 + 550), int((SCREEN_SIZE[1] - 30) / 2 + 30),
                                           30,
                                           COLORS[self.playertwo.color_index])
 
@@ -123,7 +127,7 @@ class Menu:
                 pygame.quit()
                 quit()
 
-            if self.color_btn_one.changeColor(pos):
+            if self.color_btn_one.is_inside(pos):
                 if self.playerone.color_index + 1 < len(COLORS):
                     if self.playerone.color_index + 1 != self.playertwo.color_index:
                         self.playerone.color_index += 1
@@ -135,7 +139,7 @@ class Menu:
                     else:
                         self.playerone.color_index = 0
 
-            if self.color_btn_two.changeColor(pos):
+            if self.color_btn_two.is_inside(pos):
                 if self.playertwo.color_index + 1 < len(COLORS):
                     if self.playertwo.color_index + 1 != self.playerone.color_index:
                         self.playertwo.color_index += 1
@@ -154,6 +158,16 @@ class Menu:
         else:
             self.start_btn.drawRect(self.surf)
 
+        if self.tick_zone_one.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.tick_zone_one.hover(self.surf)
+        else:
+            self.tick_zone_one.drawRect(self.surf)
+
+        if self.tick_zone_two.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.tick_zone_two.hover(self.surf)
+        else:
+            self.tick_zone_two.drawRect(self.surf)
+
         if self.AI_diff_one.get_rect().collidepoint(pygame.mouse.get_pos()) and not self.AI_diff_one.isDisabled():
             self.AI_diff_one.hover(self.surf)
         else:
@@ -169,10 +183,16 @@ class Menu:
         else:
             self.leave_btn.drawRect(self.surf)
 
-        self.tick_zone_one.drawRect(self.surf)
-        self.tick_zone_two.drawRect(self.surf)
-        self.color_btn_one.drawCircle(self.surf, COLORS[self.playerone.color_index])
-        self.color_btn_two.drawCircle(self.surf, COLORS[self.playertwo.color_index])
+        if self.color_btn_one.is_inside(pygame.mouse.get_pos()):
+            self.color_btn_one.hover(COLORS[self.playerone.color_index])
+        else:
+            self.color_btn_one.drawCircle(COLORS[self.playerone.color_index])
+
+        if self.color_btn_two.is_inside(pygame.mouse.get_pos()):
+            self.color_btn_two.hover(COLORS[self.playertwo.color_index])
+        else:
+            self.color_btn_two.drawCircle(COLORS[self.playertwo.color_index])
+
 
         self.surf.blit(self.title, self.title_rect)
         self.surf.blit(self.player_one, self.player_one_rect)
