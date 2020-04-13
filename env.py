@@ -45,6 +45,7 @@ class Teeko:
         self.selection_offset_y = None
         self.selection_offset_x = None
         self.dqnAgent = None
+        self.gameended = False
 
     def loadDQN(self):
         # self.dqnAgent = DQNAgent()
@@ -102,13 +103,25 @@ class Teeko:
         self.plate = Plate(self.surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
                            (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
                            self.square_width * GRID_SIZE, self.square_width)
+
+        self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
+        self.winnerannouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
+        self.winnerannouced_rect = self.winnerannouced.get_rect()
+        self.winnerannouced_rect.center = ((SCREEN_SIZE[0])/2, (SCREEN_SIZE[1] - 400) / 2 + 150)
+
+        self.retrybtn = Button((SCREEN_SIZE[0]-700)/2, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50,'Retry', BACKGROUND)
+        self.gotomenu = Button((SCREEN_SIZE[0]-700)/2 + 275, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Go to Menu', BACKGROUND)
+        self.leavegame = Button((SCREEN_SIZE[0]-700)/2 + 550, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Quit', BACKGROUND)
+
         self.selected_token = None
         self.selection_offset_y = 0
         self.selection_offset_x = 0
 
     def won(self):
+        self.gameended = True
+        self.winnerannouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
         print(f'Game finished. Player {self.turn_to.idt} won\n', self.grid)
-        raise SystemExit()
+        #raise SystemExit()
 
     def calculating(self):
         return self.minmax_thread is not None
@@ -403,11 +416,50 @@ class Teeko:
             elif token_view[0] == 2:
                 token_view[2].render(COLORS[self.players[1].color_index])
 
+        if self.gameended:
+            backgroundend = pygame.Surface(SCREEN_SIZE)
+            backgroundend.fill(GRAY)
+            backgroundend.set_alpha(150)
+            self.surf.blit(backgroundend,(0,0))
+
+            bandeau = pygame.Surface((SCREEN_SIZE[0], 400))
+            bandeau.fill(BACKGROUND)
+            self.surf.blit(bandeau,(0,(SCREEN_SIZE[1]-400)/2))
+
+            if self.retrybtn.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.retrybtn.hover(self.surf)
+            else:
+                self.retrybtn.drawRect(self.surf)
+
+            if self.gotomenu.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.gotomenu.hover(self.surf)
+            else:
+                self.gotomenu.drawRect(self.surf)
+
+            if self.leavegame.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.leavegame.hover(self.surf)
+            else:
+                self.leavegame.drawRect(self.surf)
+
+            self.surf.blit(self.winnerannouced, self.winnerannouced_rect)
+
     def parseEvent(self, event):
         pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.back_btn.on_button(pos):
                 return CODE_TO_MENU
+
+            if self.gotomenu.on_button(pos):
+                return CODE_TO_MENU
+
+            if self.leavegame.on_button(pos):
+                pygame.quit()
+                game.killMinMax()
+                quit()
+
+            if self.retrybtn.on_button(pos):
+                self.gameended = False
+                return CODE_TO_GAME
 
             for token_view in self.players_tokens:
                 if token_view[2].on_token(pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
