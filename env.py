@@ -139,10 +139,10 @@ class Teeko:
             div_previous_pos = token // 5
             previous_pos = token
             for direction in SURROUNDING:
-                if (direction != 6 or 2 < module_previous_pos + div_previous_pos < 6) and (
-                        direction != 4 or abs(module_previous_pos - div_previous_pos) < 2):
+                current_alignment = 1
+                if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2 and (
+                        direction != 4 or 2 < module_previous_pos + div_previous_pos < 6)):
 
-                    current_alignment = 1
                     new_pos = token + direction
 
                     value = self.grid[token]
