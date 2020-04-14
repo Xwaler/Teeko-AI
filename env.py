@@ -142,7 +142,6 @@ class Teeko:
         for token in player.tokens:
             module_previous_pos = token % 5
             div_previous_pos = token // 5
-            previous_pos = token
 
             for direction in SURROUNDING:
                 if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2) and (
@@ -151,17 +150,17 @@ class Teeko:
                     current_alignment = 1
                     space_used = False
 
-                    prev_pos = token - direction
                     # TODO: TROUVER SOLUTION POUR LE CAS 01112 -> 3, DONNE ACTUELLEMENT 1
+                    module_previous_pos = token % 5
+                    previous_pos = token
                     new_pos = token + direction
-                    idt = self.grid[token]
 
                     while 0 <= new_pos < 25 \
                             and ((module_previous_pos != 0 and module_previous_pos != 4) or
                                  (previous_pos + new_pos) % 5 != 4) \
                             and not (space_used and (self.grid[new_pos] == 0 or current_alignment > 2)):
 
-                        if self.grid[new_pos] == idt:
+                        if self.grid[new_pos] == player.idt:
                             previous_pos = new_pos
                             module_previous_pos = previous_pos % 5
                             new_pos += direction
