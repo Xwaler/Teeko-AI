@@ -53,7 +53,7 @@ class Teeko:
         self.game_ended = False
 
     def loadDQN(self):
-        # self.dqnAgent = DQNAgent()
+        # self.dqn_agent = DQNAgent()
         pass
 
     def reset(self, players=None, index_difficulty=(1, 1)):
@@ -142,7 +142,6 @@ class Teeko:
         for token in player.tokens:
             module_previous_pos = token % 5
             div_previous_pos = token // 5
-            previous_pos = token
 
             for direction in SURROUNDING:
                 if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2) and (
@@ -151,17 +150,17 @@ class Teeko:
                     current_alignment = 1
                     space_used = False
 
-                    prev_pos = token - direction
                     # TODO: TROUVER SOLUTION POUR LE CAS 01112 -> 3, DONNE ACTUELLEMENT 1
+                    module_previous_pos = token % 5
+                    previous_pos = token
                     new_pos = token + direction
-                    idt = self.grid[token]
 
                     while 0 <= new_pos < 25 \
                             and ((module_previous_pos != 0 and module_previous_pos != 4) or
                                  (previous_pos + new_pos) % 5 != 4) \
                             and not (space_used and (self.grid[new_pos] == 0 or current_alignment > 2)):
 
-                        if self.grid[new_pos] == idt:
+                        if self.grid[new_pos] == player.idt:
                             previous_pos = new_pos
                             module_previous_pos = previous_pos % 5
                             new_pos += direction
@@ -236,23 +235,21 @@ class Teeko:
         return np.where(self.grid == 0)[0]
 
     def over(self, align_score=None):
-        if align_score is not None:
-            return max(align_score) >= 4
-        else:
-            return max(self.getAligned(player) for player in self.players) >= 4
+        if align_score is None:
+            align_score = [self.getAligned(player) for player in self.players]
+        return max(align_score) >= 4
 
-    def getScore(self, align_score=None, depth=1):
-        if align_score is not None:
-            p1, p2 = align_score
-        else:
-            p1, p2 = [self.getAligned(player) for player in self.players]
+    def getScore(self, align_score=None, depth=0):
+        if align_score is None:
+            align_score = [self.getAligned(player) for player in self.players]
+        p1, p2 = align_score
 
         if p1 >= 4:
             return 20 * (depth + 1)
         elif p2 >= 4:
             return -20 * (depth + 1)
         else:
-            w1, w2 = (1.5, 1.75) if self.turn_to.idt == 1 else (1.75, 1.5)
+            w1, w2 = (1.50, 1.75) if self.turn_to.idt == 1 else (1.75, 1.50)
             return round((p1 ** w1) - (p2 ** w2), 4)
 
     #  move = (0, pos token à placer, 0) ou (1, pos token à deplacer, direction)
@@ -270,7 +267,7 @@ class Teeko:
 
         if player.idt == 1:
             max_score = -np.inf
-            max_score_moves = []
+            max_score_move = None
 
             for move in self.getAllMoves(player):
                 if move[0] == 0:
@@ -287,10 +284,7 @@ class Teeko:
 
                 if score > max_score:
                     max_score = score
-                    max_score_moves = []
-
-                if score == max_score:
-                    max_score_moves.append(move)
+                    max_score_move = move
 
                 alpha = max(alpha, score)
                 if beta <= alpha:
@@ -299,12 +293,11 @@ class Teeko:
             if not DEPTH_IS_MAX:
                 return max_score
             else:
-                print('Max: ', max_score_moves)
-                return max_score, randomChoice(max_score_moves)
+                return max_score, max_score_move
 
         else:
             min_score = np.inf
-            min_score_moves = []
+            min_score_move = None
 
             for move in self.getAllMoves(player):
                 if move[0] == 0:
@@ -321,10 +314,7 @@ class Teeko:
 
                 if score < min_score:
                     min_score = score
-                    min_score_moves = []
-
-                if score == min_score:
-                    min_score_moves.append(move)
+                    min_score_move = move
 
                 beta = min(beta, score)
                 if beta <= alpha:
@@ -333,8 +323,7 @@ class Teeko:
             if not DEPTH_IS_MAX:
                 return min_score
             else:
-                print('Min: ', min_score_moves)
-                return min_score, randomChoice(min_score_moves)
+                return min_score, min_score_move
 
     def makeMove(self, move):
         if move[0] == 0:
@@ -389,7 +378,7 @@ class Teeko:
                     self.minmax_thread.start()
 
                 elif self.turn_to.ptype == 2:
-                    # preds = self.dqnAgent.predict(self.getState())
+                    # preds = self.dqn_agent.predict(self.getState())
                     # move = self.predsToMove(preds)
                     # self.makeMove(move)
                     pass
