@@ -41,7 +41,9 @@ class Teeko:
         self.player_two_rect = None
         self.back_btn = None
         self.plate = None
-        self.crown = pygame.image.load("crown.png")
+        self.currentlyplaying = None
+        self.currentlyplaying_rect = None
+        self.angle = None
         self.winner_annouced = None
         self.winner_annouced_rect = None
         self.retry_btn = None
@@ -100,6 +102,9 @@ class Teeko:
         self.player_two_rect = self.player_two.get_rect()
         self.player_two_rect.center = (
             int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
+
+        self.currentlyplaying = pygame.image.load("hourglass.png")
+        self.angle = 0
 
         self.back_btn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
                                '< Back', BACKGROUND)
@@ -417,16 +422,20 @@ class Teeko:
 
     def render(self):
         self.surf.fill(BACKGROUND)
-
         self.surf.blit(self.player_one, self.player_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
 
         if self.turn_to.idt == 1:
-            self.surf.blit(self.crown, ((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 32, 70))
+            self.angle = (self.angle + 2)%360
+            rotated_surf = pygame.transform.rotate(self.currentlyplaying,self.angle)
+            self.currentlyplaying_rect = rotated_surf.get_rect(center=((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4,60))
         else:
-            self.surf.blit(self.crown, (
-                (3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE - 32, 70
-            ))
+            self.angle = (self.angle + 2) % 360
+            rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
+            self.currentlyplaying_rect = rotated_surf.get_rect(center=((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 60))
+
+        self.surf.blit(rotated_surf,self.currentlyplaying_rect)
+        pygame.display.flip()
 
         if self.back_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
             self.back_btn.hover(self.surf)
