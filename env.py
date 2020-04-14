@@ -398,17 +398,22 @@ class Teeko:
                 self.turn_to = self.players[abs(self.turn_to.idt - 2)]
 
     def getState(self):
-        # TODO: RETURNS AN ARRAY REPRESENTATION OF THE GAME STATE
-        pass
+        return self.grid / 2  # NORMALIZED TO 1
 
-    def predsToMove(self, preds):
-        # TODO: CONVERTS AN ARRAY OF PROBABILITIES TO A MOVE
-        pass
+    @staticmethod
+    def predsToMove(preds):
+        move = [np.argmax(preds[:2]),
+                np.argmax(preds[2:27]),
+                DIRECTIONS[np.argmax(preds[27:35])]]
+        return move
 
-    def moveToPreds(self, move):
-        # TODO: CONVERTS A MOVE TO A PERFECT ARRAY WITH THE SHAPE OF THE NETWORK'S OUTPUT,
-        #  MUST REPRESENT THE OBJECTIVE THAT THE NETWORK MUST ACHIEVE
-        pass
+    @staticmethod
+    def moveToPreds(move):
+        preds = np.zeros(2 + 25 + 8, dtype=np.int8)
+        preds[move[0]] = 1
+        preds[2 + move[1]] = 1
+        preds[2 + 25 + DIRECTIONS.index(move[2])] = 1
+        return preds
 
     def render(self):
         self.surf.fill(BACKGROUND)
@@ -417,9 +422,11 @@ class Teeko:
         self.surf.blit(self.player_two, self.player_two_rect)
 
         if self.turn_to.idt == 1:
-            self.surf.blit(self.crown,((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 32, 70))
+            self.surf.blit(self.crown, ((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 32, 70))
         else:
-            self.surf.blit(self.crown, ((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE - 32, 70))
+            self.surf.blit(self.crown, (
+                (3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE - 32, 70
+            ))
 
         if self.back_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
             self.back_btn.hover(self.surf)
