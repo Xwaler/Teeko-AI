@@ -500,6 +500,9 @@ class Teeko:
                                 current_drop_zone = iter_drop_zone
                             i += 1
                         if current_drop_zone is not None:
+                            if len(self.turn_to.tokens) < 4:
+                                break
+
                             self.removeToken(self.turn_to, 5 * current_drop_zone.ordonne + current_drop_zone.abscisse)
                             current_drop_zone.available = True
 
