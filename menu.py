@@ -8,7 +8,7 @@ from views import Button
 
 
 class ColorChanger:
-    def __init__(self,screen, x, y, r, color):
+    def __init__(self, screen, x, y, r, color):
         self.surf = screen
         self.x = x
         self.y = y
@@ -19,14 +19,15 @@ class ColorChanger:
         pygame.draw.circle(self.surf, BLACK, (self.x, self.y), self.r)
         pygame.draw.circle(self.surf, color, (self.x, self.y), self.r - 2)
 
-    def is_inside(self,pos):
+    def is_inside(self, pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= self.r:
             return True
         return False
 
-    def hover(self,color):
+    def hover(self, color):
         pygame.draw.circle(self.surf, BLACK, (self.x, self.y), self.r)
         pygame.draw.circle(self.surf, color, (self.x, self.y), self.r - 4)
+
 
 class Menu:
     def __init__(self, surf):
@@ -43,9 +44,11 @@ class Menu:
         self.playerone = Player(1, 0, 0)
         self.playertwo = Player(2, 1, 1)
 
-        self.color_btn_one = ColorChanger(self.surf,int((SCREEN_SIZE[0] - 700) / 2), int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
+        self.color_btn_one = ColorChanger(self.surf, int((SCREEN_SIZE[0] - 700) / 2),
+                                          int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
                                           COLORS[self.playerone.color_index])
-        self.color_btn_two = ColorChanger(self.surf,int((SCREEN_SIZE[0] - 700) / 2 + 550), int((SCREEN_SIZE[1] - 30) / 2 + 30),
+        self.color_btn_two = ColorChanger(self.surf, int((SCREEN_SIZE[0] - 700) / 2 + 550),
+                                          int((SCREEN_SIZE[1] - 30) / 2 + 30),
                                           30,
                                           COLORS[self.playertwo.color_index])
 
@@ -192,7 +195,6 @@ class Menu:
             self.color_btn_two.hover(COLORS[self.playertwo.color_index])
         else:
             self.color_btn_two.drawCircle(COLORS[self.playertwo.color_index])
-
 
         self.surf.blit(self.title, self.title_rect)
         self.surf.blit(self.player_one, self.player_one_rect)
