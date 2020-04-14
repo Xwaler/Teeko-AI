@@ -490,7 +490,7 @@ class Teeko:
         if event.type == pygame.MOUSEBUTTONUP:
             if self.selected_token is not None:
                 for drop_zone in self.plate.playable_zones:
-                    if drop_zone.isAvailable() and drop_zone.onPropzone(pos):
+                    if drop_zone.isAvailable() and drop_zone.onPropzone(pos) and drop_zone.legitmove(self.selected_token,len(self.turn_to.tokens)):
                         current_drop_zone, i = None, 0
                         while i < len(self.plate.playable_zones) and current_drop_zone is None:
                             iter_drop_zone = self.plate.playable_zones[i]
