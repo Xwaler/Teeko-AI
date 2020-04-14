@@ -44,7 +44,7 @@ class PlayableZone:
         pygame.draw.circle(self.surf, BACKGROUND, (self.x, self.y), TOKEN_RADIUS + 4 - TOKEN_THICKNESS)
 
     def onPropzone(self, pos):
-        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
+        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS+10:
             return True
         return False
 

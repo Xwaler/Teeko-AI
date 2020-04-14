@@ -41,6 +41,7 @@ class Teeko:
         self.player_two_rect = None
         self.back_btn = None
         self.plate = None
+        self.crown = pygame.image.load("crown.png")
         self.winner_annouced = None
         self.winner_annouced_rect = None
         self.retry_btn = None
@@ -414,6 +415,11 @@ class Teeko:
 
         self.surf.blit(self.player_one, self.player_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
+
+        if self.turn_to.idt == 1:
+            self.surf.blit(self.crown,((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 32, 70))
+        else:
+            self.surf.blit(self.crown, ((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE - 32, 70))
 
         if self.back_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
             self.back_btn.hover(self.surf)
