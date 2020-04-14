@@ -41,16 +41,16 @@ class Teeko:
         self.player_two_rect = None
         self.back_btn = None
         self.plate = None
-        self.winnerannouced = None
-        self.winnerannouced_rect = None
-        self.retrybtn = None
-        self.gotomenu = None
-        self.leavegame = None
+        self.winner_annouced = None
+        self.winner_annouced_rect = None
+        self.retry_btn = None
+        self.goto_menu = None
+        self.leave_game = None
         self.selected_token = None
         self.selection_offset_y = None
         self.selection_offset_x = None
-        self.dqnAgent = None
-        self.gameended = False
+        self.dqn_agent = None
+        self.game_ended = False
 
     def loadDQN(self):
         # self.dqnAgent = DQNAgent()
@@ -63,7 +63,7 @@ class Teeko:
             self.players = players
             for player in self.players:
                 player.tokens.clear()
-                if player.ptype == 2 and self.dqnAgent is None:
+                if player.ptype == 2 and self.dqn_agent is None:
                     self.loadDQN()
         else:
             self.players = [Player(i, 1, i - 1) for i in [1, 2]]
@@ -108,24 +108,24 @@ class Teeko:
                            self.square_width * GRID_SIZE, self.square_width)
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
-        self.winnerannouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
-        self.winnerannouced_rect = self.winnerannouced.get_rect()
-        self.winnerannouced_rect.center = ((SCREEN_SIZE[0]) / 2, (SCREEN_SIZE[1] - 400) / 2 + 150)
+        self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
+        self.winner_annouced_rect = self.winner_annouced.get_rect()
+        self.winner_annouced_rect.center = ((SCREEN_SIZE[0]) / 2, (SCREEN_SIZE[1] - 400) / 2 + 150)
 
-        self.retrybtn = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Retry',
-                               BACKGROUND)
-        self.gotomenu = Button((SCREEN_SIZE[0] - 700) / 2 + 275, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50,
-                               'Go to Menu', BACKGROUND)
-        self.leavegame = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Quit',
+        self.retry_btn = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Retry',
                                 BACKGROUND)
+        self.goto_menu = Button((SCREEN_SIZE[0] - 700) / 2 + 275, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50,
+                                'Go to Menu', BACKGROUND)
+        self.leave_game = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Quit',
+                                 BACKGROUND)
 
         self.selected_token = None
         self.selection_offset_y = 0
         self.selection_offset_x = 0
 
     def won(self):
-        self.gameended = True
-        self.winnerannouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
+        self.game_ended = True
+        self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
         print(f'Game finished. Player {self.turn_to.idt} won\n', self.rectGrid())
 
     def calculating(self):
@@ -151,6 +151,8 @@ class Teeko:
                     current_alignment = 1
                     space_used = False
 
+                    prev_pos = token - direction
+                    # TODO: TROUVER SOLUTION POUR LE CAS 01112 -> 3, DONNE ACTUELLEMENT 1
                     new_pos = token + direction
                     idt = self.grid[token]
 
@@ -223,7 +225,7 @@ class Teeko:
 
     def getAllMoves(self, player):
         if len(player.tokens) < 4:
-            moves = [[0, pos, 0] for pos in self.getAllEmpty()]
+            moves = [[0, pos] for pos in self.getAllEmpty()]
         else:
             moves = []
             for token in player.tokens:
@@ -239,15 +241,21 @@ class Teeko:
         else:
             return max(self.getAligned(player) for player in self.players) >= 4
 
-    def getScore(self, align_score=None):
+    def getScore(self, align_score=None, depth=1):
         if align_score is not None:
             p1, p2 = align_score
         else:
-            p1, p2 = (self.getAligned(player) for player in self.players)
-        w1, w2 = (1.3, 1.5) if self.turn_to.idt == 1 else (1.5, 1.3)
-        return round((p1 ** w1) - (p2 ** w2), 4)
+            p1, p2 = [self.getAligned(player) for player in self.players]
 
-    #  move = (0, (pos token à placer), (0, 0)) ou (1, (pos token à deplacer), (direction))
+        if p1 >= 4:
+            return 20 * (depth + 1)
+        elif p2 >= 4:
+            return -20 * (depth + 1)
+        else:
+            w1, w2 = (1.5, 1.75) if self.turn_to.idt == 1 else (1.75, 1.5)
+            return round((p1 ** w1) - (p2 ** w2), 4)
+
+    #  move = (0, pos token à placer, 0) ou (1, pos token à deplacer, direction)
     def minMax(self, depth, alpha, beta, player):
         if self.kill_thread:
             self.minmax_thread = None
@@ -256,17 +264,9 @@ class Teeko:
         DEPTH_IS_ZERO = depth == 0
         DEPTH_IS_MAX = depth == MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]]
 
-        # print("\n\ndepth : ", depth)
-
-        # print("state : \n", self.grid)
-
-        # print("player : ", player.idt)
-
-        # print("move : ", move)
-
         align_score = [self.getAligned(p) for p in self.players]
         if DEPTH_IS_ZERO or self.over(align_score):
-            return self.getScore(align_score) * (1 + (.25 * depth))
+            return self.getScore(align_score, depth)
 
         if player.idt == 1:
             max_score = -np.inf
@@ -279,7 +279,6 @@ class Teeko:
                     self.moveToken(player, move[1], move[2])
 
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
-                # print("score : ", score)
 
                 if move[0] == 0:
                     self.removeToken(player, move[1])
@@ -314,13 +313,11 @@ class Teeko:
                     self.moveToken(player, move[1], move[2])
 
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
-                # print("score : ", score)
 
                 if move[0] == 0:
                     self.removeToken(player, move[1])
                 else:
                     self.moveToken(player, move[1] + move[2], -move[2])
-                # print("score : ", score)
 
                 if score < min_score:
                     min_score = score
@@ -340,11 +337,11 @@ class Teeko:
                 return min_score, randomChoice(min_score_moves)
 
     def makeMove(self, move):
-        AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
-
         if move[0] == 0:
             self.addToken(self.turn_to, move[1])
             if self.render_enabled:
+                AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
+
                 for drop_zones in self.plate.playable_zones:
                     if drop_zones.abscisse == move[1] % 5 and drop_zones.ordonne == move[1] // 5:
                         drop_zones.available = False
@@ -355,6 +352,8 @@ class Teeko:
             self.moveToken(self.turn_to, move[1], move[2])
 
             if self.render_enabled:
+                AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
+
                 current_drop_zone, future_drop_zone, i = None, None, 0
                 while current_drop_zone is None or future_drop_zone is None:
                     drop_zone = self.plate.playable_zones[i]
@@ -383,7 +382,7 @@ class Teeko:
         self.makeMove(move)
 
     def update(self):
-        if not self.gameended:
+        if not self.game_ended:
             if not self.turn_to.has_played:
                 if self.turn_to.ptype == 1 and not self.calculating():
                     self.minmax_thread = threading.Thread(target=self.AI_handler)
@@ -435,32 +434,32 @@ class Teeko:
             elif token_view[0] == 2:
                 token_view[2].render(COLORS[self.players[1].color_index])
 
-        if self.gameended:
-            backgroundend = pygame.Surface(SCREEN_SIZE)
-            backgroundend.fill(GRAY)
-            backgroundend.set_alpha(150)
-            self.surf.blit(backgroundend, (0, 0))
+        if self.game_ended:
+            background_end = pygame.Surface(SCREEN_SIZE)
+            background_end.fill(GRAY)
+            background_end.set_alpha(150)
+            self.surf.blit(background_end, (0, 0))
 
             bandeau = pygame.Surface((SCREEN_SIZE[0], 400))
             bandeau.fill(BACKGROUND)
             self.surf.blit(bandeau, (0, (SCREEN_SIZE[1] - 400) / 2))
 
-            if self.retrybtn.get_rect().collidepoint(pygame.mouse.get_pos()):
-                self.retrybtn.hover(self.surf)
+            if self.retry_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.retry_btn.hover(self.surf)
             else:
-                self.retrybtn.drawRect(self.surf)
+                self.retry_btn.drawRect(self.surf)
 
-            if self.gotomenu.get_rect().collidepoint(pygame.mouse.get_pos()):
-                self.gotomenu.hover(self.surf)
+            if self.goto_menu.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.goto_menu.hover(self.surf)
             else:
-                self.gotomenu.drawRect(self.surf)
+                self.goto_menu.drawRect(self.surf)
 
-            if self.leavegame.get_rect().collidepoint(pygame.mouse.get_pos()):
-                self.leavegame.hover(self.surf)
+            if self.leave_game.get_rect().collidepoint(pygame.mouse.get_pos()):
+                self.leave_game.hover(self.surf)
             else:
-                self.leavegame.drawRect(self.surf)
+                self.leave_game.drawRect(self.surf)
 
-            self.surf.blit(self.winnerannouced, self.winnerannouced_rect)
+            self.surf.blit(self.winner_annouced, self.winner_annouced_rect)
 
     def parseEvent(self, event):
         pos = pygame.mouse.get_pos()
@@ -468,17 +467,18 @@ class Teeko:
             if self.back_btn.on_button(pos):
                 return CODE_TO_MENU
 
-            if self.gameended:
-                if self.gotomenu.on_button(pos):
+            if self.game_ended:
+                if self.goto_menu.on_button(pos):
+                    self.game_ended = False
                     return CODE_TO_MENU
 
-                if self.leavegame.on_button(pos):
+                if self.leave_game.on_button(pos):
                     pygame.quit()
                     self.killMinMax()
                     quit()
 
-                if self.retrybtn.on_button(pos):
-                    self.gameended = False
+                if self.retry_btn.on_button(pos):
+                    self.game_ended = False
                     return CODE_TO_GAME
 
             for token_view in self.players_tokens:
