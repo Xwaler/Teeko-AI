@@ -30,13 +30,14 @@ class TokenView:
 
 
 class PlayableZone:
-    def __init__(self, surf, x, y, i, j):
+    def __init__(self, surf, x, y, i, j,square):
         self.surf = surf
         self.x = x
         self.y = y
         self.abscisse = i
         self.ordonne = j
         self.available = True
+        self.square_width = square
 
     def render(self):
         pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS + 5, TOKEN_THICKNESS)
@@ -44,6 +45,11 @@ class PlayableZone:
 
     def onPropzone(self, pos):
         if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
+            return True
+        return False
+
+    def legitmove(self,token,len):
+        if token.initial_x - self.square_width <= self.x <= token.initial_x + self.square_width and token.initial_y - self.square_width <= self.y <= token.initial_y + self.square_width or len < 4 :
             return True
         return False
 
@@ -66,7 +72,7 @@ class Plate:
                     PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
                         (SCREEN_SIZE[0] - self.w) / 2),
                                  j * self.square_width + self.square_width // 2 + int(
-                                     (SCREEN_SIZE[1] - self.w) / 2), i, j))
+                                     (SCREEN_SIZE[1] - self.w) / 2), i, j,self.square_width))
 
     def render(self):
         pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.w), 3)
