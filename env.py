@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 
 from constants import *
-# from dqn import DQNAgent
+from dqn import DQNAgent
 from tools import randomChoice
 from views import Plate, TokenView, Button
 
@@ -56,8 +56,7 @@ class Teeko:
         self.game_ended = False
 
     def loadDQN(self):
-        # self.dqn_agent = DQNAgent()
-        pass
+        self.dqn_agent = DQNAgent()
 
     def reset(self, players=None, index_difficulty=(1, 1)):
         self.grid = np.zeros(GRID_SIZE * GRID_SIZE, dtype=np.int)
@@ -388,10 +387,9 @@ class Teeko:
                     self.minmax_thread.start()
 
                 elif self.turn_to.ptype == 2:
-                    # preds = self.dqn_agent.predict(self.getState())
-                    # move = self.predsToMove(preds)
-                    # self.makeMove(move)
-                    pass
+                    preds = self.dqn_agent.predict(self.getState())
+                    move = self.dqn_agent.predsToMove(preds)
+                    self.makeMove(move)
 
             else:
                 print(f'P{self.turn_to.idt} align : {self.getAligned(self.turn_to)}, tokens : {self.turn_to.tokens}')
@@ -405,36 +403,23 @@ class Teeko:
     def getState(self):
         return self.grid / 2  # NORMALIZED TO 1
 
-    @staticmethod
-    def predsToMove(preds):
-        move = [np.argmax(preds[:2]),
-                np.argmax(preds[2:27]),
-                DIRECTIONS[np.argmax(preds[27:35])]]
-        return move
-
-    @staticmethod
-    def moveToPreds(move):
-        preds = np.zeros(2 + 25 + 8, dtype=np.int8)
-        preds[move[0]] = 1
-        preds[2 + move[1]] = 1
-        preds[2 + 25 + DIRECTIONS.index(move[2])] = 1
-        return preds
-
     def render(self):
         self.surf.fill(BACKGROUND)
         self.surf.blit(self.player_one, self.player_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
 
         if self.turn_to.idt == 1:
-            self.angle = (self.angle + 2)%360
-            rotated_surf = pygame.transform.rotate(self.currentlyplaying,self.angle)
-            self.currentlyplaying_rect = rotated_surf.get_rect(center=((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4,60))
+            self.angle = (self.angle + 2) % 360
+            rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
+            self.currentlyplaying_rect = rotated_surf.get_rect(
+                center=((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4, 60))
         else:
             self.angle = (self.angle + 2) % 360
             rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
-            self.currentlyplaying_rect = rotated_surf.get_rect(center=((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 60))
+            self.currentlyplaying_rect = rotated_surf.get_rect(
+                center=((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 60))
 
-        self.surf.blit(rotated_surf,self.currentlyplaying_rect)
+        self.surf.blit(rotated_surf, self.currentlyplaying_rect)
         pygame.display.flip()
 
         if self.back_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
