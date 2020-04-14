@@ -30,7 +30,7 @@ class TokenView:
 
 
 class PlayableZone:
-    def __init__(self, surf, x, y, i, j,square):
+    def __init__(self, surf, x, y, i, j, square):
         self.surf = surf
         self.x = x
         self.y = y
@@ -48,8 +48,9 @@ class PlayableZone:
             return True
         return False
 
-    def legitmove(self,token,len):
-        if token.initial_x - self.square_width <= self.x <= token.initial_x + self.square_width and token.initial_y - self.square_width <= self.y <= token.initial_y + self.square_width or len < 4 :
+    def legitMove(self, token, length):
+        if token.initial_x - self.square_width <= self.x <= token.initial_x + self.square_width \
+                and token.initial_y - self.square_width <= self.y <= token.initial_y + self.square_width or length < 4:
             return True
         return False
 
@@ -72,17 +73,22 @@ class Plate:
                     PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
                         (SCREEN_SIZE[0] - self.w) / 2),
                                  j * self.square_width + self.square_width // 2 + int(
-                                     (SCREEN_SIZE[1] - self.w) / 2), i, j,self.square_width))
+                                     (SCREEN_SIZE[1] - self.w) / 2), i, j, self.square_width))
 
     def render(self):
         pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.w), 3)
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
-                pygame.draw.line(self.surf,BLACK,(self.playable_zones[i + j*5].x, self.playable_zones[i + j*5].y), (self.playable_zones[len(self.playable_zones)-1-i*5 - j].x, self.playable_zones[len(self.playable_zones)-1-i*5 - j].y), 5)
-                pygame.draw.line(self.surf, BLACK, (self.playable_zones[i + j*5].x, self.playable_zones[i + j*5].y), (self.playable_zones[i + i * 4 +j ].x,self.playable_zones[i+ i * 4 +j ].y), 5)
-            pygame.draw.line(self.surf, BLACK, (self.playable_zones[j].x, self.playable_zones[j].y),(self.playable_zones[len(self.playable_zones)-5+j].x, self.playable_zones[len(self.playable_zones)-5+j].y), 5)
-            pygame.draw.line(self.surf, BLACK, (self.playable_zones[j*5].x, self.playable_zones[j*5].y), (self.playable_zones[4+j*5].x,self.playable_zones[4+j*5].y), 5)
-
+                pygame.draw.line(self.surf, BLACK, (self.playable_zones[i + j * 5].x, self.playable_zones[i + j * 5].y),
+                                 (self.playable_zones[len(self.playable_zones) - 1 - i * 5 - j].x,
+                                  self.playable_zones[len(self.playable_zones) - 1 - i * 5 - j].y), 5)
+                pygame.draw.line(self.surf, BLACK, (self.playable_zones[i + j * 5].x, self.playable_zones[i + j * 5].y),
+                                 (self.playable_zones[i + i * 4 + j].x, self.playable_zones[i + i * 4 + j].y), 5)
+            pygame.draw.line(self.surf, BLACK, (self.playable_zones[j].x, self.playable_zones[j].y), (
+                self.playable_zones[len(self.playable_zones) - 5 + j].x,
+                self.playable_zones[len(self.playable_zones) - 5 + j].y), 5)
+            pygame.draw.line(self.surf, BLACK, (self.playable_zones[j * 5].x, self.playable_zones[j * 5].y),
+                             (self.playable_zones[4 + j * 5].x, self.playable_zones[4 + j * 5].y), 5)
 
         for playable_zone in self.playable_zones:
             playable_zone.render()

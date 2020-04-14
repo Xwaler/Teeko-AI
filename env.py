@@ -147,42 +147,46 @@ class Teeko:
     def getAligned(self, player):
         longest_line = 1
         for token in player.tokens:
-            module_previous_pos = token % 5
-            div_previous_pos = token // 5
+            module_current_pos = token % 5
+            div_current_pos = token // 5
 
             for direction in SURROUNDING:
-                if (direction != 6 or abs(module_previous_pos - div_previous_pos) < 2) and (
-                        direction != 4 or 2 < module_previous_pos + div_previous_pos < 6):
+                if (direction != 6 or abs(module_current_pos - div_current_pos) < 2) and (
+                        direction != 4 or 2 < module_current_pos + div_current_pos < 6):
 
                     current_alignment = 1
                     space_used = False
 
-                    # TODO: TROUVER SOLUTION POUR LE CAS 01112 -> 3, DONNE ACTUELLEMENT 1
-                    module_previous_pos = token % 5
-                    previous_pos = token
+                    module_current_pos = token % 5
+                    current_pos = token
                     new_pos = token + direction
 
+                    previous_pos = token - direction
+                    space_before = 0 <= previous_pos < 25 and (
+                            (module_current_pos != 0 and module_current_pos != 4) or
+                            (current_pos + new_pos) % 5 != 4) and self.grid[previous_pos] == 0
+
                     while 0 <= new_pos < 25 \
-                            and ((module_previous_pos != 0 and module_previous_pos != 4) or
-                                 (previous_pos + new_pos) % 5 != 4) \
+                            and ((module_current_pos != 0 and module_current_pos != 4) or
+                                 (current_pos + new_pos) % 5 != 4) \
                             and not (space_used and (self.grid[new_pos] == 0 or current_alignment > 2)):
 
                         if self.grid[new_pos] == player.idt:
-                            previous_pos = new_pos
-                            module_previous_pos = previous_pos % 5
+                            current_pos = new_pos
+                            module_current_pos = current_pos % 5
                             new_pos += direction
 
                             current_alignment += 1
 
                         elif self.grid[new_pos] == 0:
-                            previous_pos = new_pos
-                            module_previous_pos = previous_pos % 5
+                            current_pos = new_pos
+                            module_current_pos = current_pos % 5
                             new_pos += direction
 
                             space_used = True
 
                         else:
-                            if current_alignment < 4:
+                            if current_alignment < 4 and not space_before:
                                 current_alignment = 1
                             break
 
@@ -497,7 +501,8 @@ class Teeko:
         if event.type == pygame.MOUSEBUTTONUP:
             if self.selected_token is not None:
                 for drop_zone in self.plate.playable_zones:
-                    if drop_zone.isAvailable() and drop_zone.onPropzone(pos) and drop_zone.legitmove(self.selected_token,len(self.turn_to.tokens)):
+                    if drop_zone.isAvailable() and drop_zone.onPropzone(pos) and \
+                            drop_zone.legitMove(self.selected_token, len(self.turn_to.tokens)):
                         current_drop_zone, i = None, 0
                         while i < len(self.plate.playable_zones) and current_drop_zone is None:
                             iter_drop_zone = self.plate.playable_zones[i]
