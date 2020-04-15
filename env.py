@@ -24,15 +24,17 @@ class Player:
 
 class Teeko:
     def __init__(self, surf=None):
-        self.surf = surf
-        self.render_enabled = surf is not None
         self.grid = None
         self.index_difficulty = None
         self.players = None
+        self.dqn_agent = None
         self.turn_to = None
-        self.players_tokens = None
         self.minmax_thread = None
         self.kill_thread = False
+
+        self.render_enabled = surf is not None
+        self.surf = surf
+        self.players_tokens = None
         self.square_width = None
         self.font = None
         self.player_one = None
@@ -41,6 +43,10 @@ class Teeko:
         self.player_two_rect = None
         self.back_btn = None
         self.plate = None
+        self.error_txt_1 = None
+        self.error_txt_1_rect = None
+        self.error_txt_2 = None
+        self.error_txt_2_rect = None
         self.currentlyplaying = None
         self.currentlyplaying_rect = None
         self.angle = None
@@ -52,9 +58,8 @@ class Teeko:
         self.selected_token = None
         self.selection_offset_y = None
         self.selection_offset_x = None
-        self.dqn_agent = None
         self.game_ended = False
-        self.errortrigger = False
+        self.error_trigger_code = False
 
     def loadDQN(self):
         self.dqn_agent = DQNAgent()
@@ -72,13 +77,15 @@ class Teeko:
             self.players = [Player(i, 1, i - 1) for i in [1, 2]]
         self.turn_to = randomChoice(self.players)
 
-        self.players_tokens = []
-
         self.minmax_thread = None
         self.kill_thread = False
 
-        self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
+        if self.render_enabled:
+            self.initRender()
 
+    def initRender(self):
+        self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
+        self.players_tokens = []
         for k in range(2):
             x = int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (k * int(
                 self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2
@@ -88,10 +95,6 @@ class Teeko:
                  self.players[k].ptype != 0) for m in range(4)
             )
 
-        if self.render_enabled:
-            self.initRender()
-
-    def initRender(self):
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
 
         self.player_one = self.font.render('Player 1', True, BLACK)
@@ -113,9 +116,12 @@ class Teeko:
                            (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
                            self.square_width * GRID_SIZE, self.square_width)
 
-        self.errortxt = self.font.render('You can\'t place your token here :/', True, BLACK)
-        self.errortxt_rect = self.errortxt.get_rect()
-        self.errortxt_rect.center = (SCREEN_SIZE[0]/2, 20)
+        self.error_txt_1 = self.font.render('You can\'t place your token here :/', True, BLACK)
+        self.error_txt_1_rect = self.error_txt_1.get_rect()
+        self.error_txt_1_rect.center = (SCREEN_SIZE[0] / 2, 20)
+        self.error_txt_2 = self.font.render('You can\'t move your tokens yet :/', True, BLACK)
+        self.error_txt_2_rect = self.error_txt_2.get_rect()
+        self.error_txt_2_rect.center = (SCREEN_SIZE[0] / 2, 20)
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
         self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
@@ -152,8 +158,7 @@ class Teeko:
 
         for token in player.tokens:
             L_shape_direction = 0
-            module_current_pos = token % 5
-            div_current_pos = token // 5
+            div_current_pos, module_current_pos = divmod(token, 5)
 
             for direction in SURROUNDING:
                 if (direction != 6 or abs(module_current_pos - div_current_pos) < 2) and (
@@ -308,7 +313,7 @@ class Teeko:
 
     def getAllMoves(self, player):
         if len(player.tokens) < 4:
-            moves = [[0, pos] for pos in self.getAllEmpty()]
+            moves = [[0, pos, 0] for pos in self.getAllEmpty()]
         else:
             moves = []
             for token in player.tokens:
@@ -354,17 +359,19 @@ class Teeko:
             max_score_move = None
 
             for move in self.getAllMoves(player):
-                if move[0] == 0:
-                    self.addToken(player, move[1])
+                move_index, pos, direction = move
+
+                if move_index == 0:
+                    self.addToken(player, pos)
                 else:
-                    self.moveToken(player, move[1], move[2])
+                    self.moveToken(player, pos, direction)
 
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
 
-                if move[0] == 0:
-                    self.removeToken(player, move[1])
+                if move_index == 0:
+                    self.removeToken(player, pos)
                 else:
-                    self.moveToken(player, move[1] + move[2], -move[2])
+                    self.moveToken(player, pos + direction, -direction)
 
                 if score > max_score:
                     max_score = score
@@ -384,17 +391,19 @@ class Teeko:
             min_score_move = None
 
             for move in self.getAllMoves(player):
-                if move[0] == 0:
-                    self.addToken(player, move[1])
+                move_index, pos, direction = move
+
+                if move_index == 0:
+                    self.addToken(player, pos)
                 else:
-                    self.moveToken(player, move[1], move[2])
+                    self.moveToken(player, pos, direction)
 
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
 
-                if move[0] == 0:
-                    self.removeToken(player, move[1])
+                if move_index == 0:
+                    self.removeToken(player, pos)
                 else:
-                    self.moveToken(player, move[1] + move[2], -move[2])
+                    self.moveToken(player, pos + direction, -direction)
 
                 if score < min_score:
                     min_score = score
@@ -411,18 +420,21 @@ class Teeko:
 
     def makeMove(self, move):
         if move[0] == 0:
-            self.addToken(self.turn_to, move[1])
+            _, position, _ = move
+            self.addToken(self.turn_to, position)
             if self.render_enabled:
                 AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
 
                 for drop_zones in self.plate.playable_zones:
-                    if drop_zones.abscisse == move[1] % 5 and drop_zones.ordonne == move[1] // 5:
+                    div, mod = divmod(position, 5)
+                    if drop_zones.abscisse == mod and drop_zones.ordonne == div:
                         drop_zones.available = False
                         AI_tokens[len(self.turn_to.tokens) - 1][2].placeToken((drop_zones.x, drop_zones.y))
                         break
 
         else:
-            self.moveToken(self.turn_to, move[1], move[2])
+            _, token, direction = move
+            self.moveToken(self.turn_to, token, direction)
 
             if self.render_enabled:
                 AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
@@ -430,11 +442,11 @@ class Teeko:
                 current_drop_zone, future_drop_zone, i = None, None, 0
                 while current_drop_zone is None or future_drop_zone is None:
                     drop_zone = self.plate.playable_zones[i]
-                    if current_drop_zone is None and drop_zone.abscisse == move[1] % 5 and \
-                            drop_zone.ordonne == move[1] // 5:
+                    div, mod = divmod(token, 5)
+                    if current_drop_zone is None and drop_zone.abscisse == mod and drop_zone.ordonne == div:
                         current_drop_zone = drop_zone
-                    if future_drop_zone is None and drop_zone.abscisse == (move[1] + move[2]) % 5 and \
-                            drop_zone.ordonne == (move[1] + move[2]) // 5:
+                    div, mod = divmod(token + direction, 5)
+                    if future_drop_zone is None and drop_zone.abscisse == mod and drop_zone.ordonne == div:
                         future_drop_zone = drop_zone
                     i += 1
 
@@ -483,8 +495,10 @@ class Teeko:
         self.surf.blit(self.player_one, self.player_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
 
-        if self.errortrigger:
-            self.surf.blit(self.errortxt, self.errortxt_rect)
+        if self.error_trigger_code == 1:
+            self.surf.blit(self.error_txt_1, self.error_txt_1_rect)
+        elif self.error_trigger_code == 2:
+            self.surf.blit(self.error_txt_2, self.error_txt_2_rect)
 
         if self.turn_to.idt == 1:
             self.angle = (self.angle + 2) % 360
@@ -579,6 +593,7 @@ class Teeko:
                             i += 1
                         if current_drop_zone is not None:
                             if len(self.turn_to.tokens) < 4:
+                                self.error_trigger_code = 2
                                 break
 
                             self.removeToken(self.turn_to, 5 * current_drop_zone.ordonne + current_drop_zone.abscisse)
@@ -590,14 +605,13 @@ class Teeko:
 
                         self.selected_token = None
                         self.turn_to.has_played = True
-                        self.errortrigger = False
+                        self.error_trigger_code = 0
                         break
-                    else:
-                        self.errortrigger = True
 
                 if self.selected_token is not None:
                     self.selected_token.placeToken((self.selected_token.initial_x, self.selected_token.initial_y))
                     self.selected_token = None
+                    self.error_trigger_code = max(self.error_trigger_code, 1)
 
         if event.type == pygame.MOUSEMOTION:
             if self.selected_token is not None:
