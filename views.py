@@ -15,9 +15,7 @@ class TokenView:
         pygame.draw.circle(self.surf, color, (self.x, self.y), TOKEN_RADIUS)
 
     def on_token(self, pos):
-        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS:
-            return True
-        return False
+        return math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS
 
     def placeToken(self, pos):
         self.x, self.y = pos
@@ -28,50 +26,43 @@ class TokenView:
 
 
 class PlayableZone:
-    def __init__(self, surf, x, y, i, j, square):
+    def __init__(self, surf, x, y, i, j):
         self.surf = surf
         self.x = x
         self.y = y
         self.abscisse = i
         self.ordonne = j
         self.available = True
-        self.square_width = square
 
     def render(self):
         pygame.draw.circle(self.surf, BLACK, (self.x, self.y), TOKEN_RADIUS + 5, TOKEN_THICKNESS)
         pygame.draw.circle(self.surf, BACKGROUND, (self.x, self.y), TOKEN_RADIUS + 4 - TOKEN_THICKNESS)
 
     def onPropzone(self, pos):
-        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS + 10:
-            return True
-        return False
+        return math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS + 10
 
     def legitMove(self, token, length):
-        if token.initial_x - self.square_width <= self.x <= token.initial_x + self.square_width \
-                and token.initial_y - self.square_width <= self.y <= token.initial_y + self.square_width or length < 4:
-            return True
-        return False
+        return token.initial_x - SQUARE_WIDTH <= self.x <= token.initial_x + SQUARE_WIDTH \
+               and token.initial_y - SQUARE_WIDTH <= self.y <= token.initial_y + SQUARE_WIDTH or length < 4
 
     def isAvailable(self):
         return self.available
 
 
 class Plate:
-    def __init__(self, surf, x, y, w, square_width):
+    def __init__(self, surf, pos, w):
         self.surf = surf
-        self.x = x
-        self.y = y
+        self.x, self.y = pos
         self.w = w
         self.playable_zones = []
-        self.square_width = square_width
 
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 self.playable_zones.append(
-                    PlayableZone(self.surf, (i * self.square_width + self.square_width // 2) + int(
+                    PlayableZone(self.surf, (i * SQUARE_WIDTH + SQUARE_WIDTH // 2) + int(
                         (SCREEN_SIZE[0] - self.w) / 2),
-                                 j * self.square_width + self.square_width // 2 + int(
-                                     (SCREEN_SIZE[1] - self.w) / 2), i, j, self.square_width))
+                                 j * SQUARE_WIDTH + SQUARE_WIDTH // 2 + int(
+                                     (SCREEN_SIZE[1] - self.w) / 2), i, j))
 
     def render(self):
         pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.w), 3)
@@ -93,16 +84,14 @@ class Plate:
 
 
 class Button:
-    def __init__(self, x, y, w, h, text, color):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+    def __init__(self, pos, size, text, color):
+        self.x, self.y = pos
+        self.w, self.h = size
         self.color = color
         self.text = text
         self.bordercolor = BLACK
         self.textcolor = BLACK
-        self.rect = pygame.Rect(x, y, w, h)
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
         self.disableVal = False
 
     def drawRect(self, screen):
@@ -113,10 +102,7 @@ class Button:
         screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
 
     def on_button(self, pos):
-        if self.x < pos[0] < self.x + self.w:
-            if self.y < pos[1] < self.y + self.h:
-                return True
-        return False
+        return self.x < pos[0] < self.x + self.w and self.y < pos[1] < self.y + self.h
 
     def get_rect(self):
         return self.rect
@@ -150,3 +136,6 @@ class PageManager:
 
     def parseEvent(self, event):
         self.current.parseEvent(event)
+
+    def blit(self, display):
+        display.blit(self.current.surf, (0, 0))

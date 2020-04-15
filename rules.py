@@ -17,23 +17,22 @@ class Rules:
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 40)
 
-        self.leavebtn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
-                               BACKGROUND)
+        self.leave_btn = Button(LEAVE_BTN_POS, LEAVE_BTN_SIZE, 'Leave', BACKGROUND)
 
     def parseEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
 
-            if self.leavebtn.on_button(pos):
+            if self.leave_btn.on_button(pos):
                 return CODE_TO_MENU
 
     def render(self):
         self.surf.fill(BACKGROUND)
 
-        if self.leavebtn.get_rect().collidepoint(pygame.mouse.get_pos()):
-            self.leavebtn.hover(self.surf)
+        if self.leave_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.leave_btn.hover(self.surf)
         else:
-            self.leavebtn.drawRect(self.surf)
+            self.leave_btn.drawRect(self.surf)
 
         self.surf.blit(self.title, self.title_rect)
         i = 0

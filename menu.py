@@ -8,10 +8,9 @@ from views import Button
 
 
 class ColorChanger:
-    def __init__(self, screen, x, y, r, color):
+    def __init__(self, screen, pos, r, color):
         self.surf = screen
-        self.x = x
-        self.y = y
+        self.x, self.y = pos
         self.r = r
         self.color = color
 
@@ -36,7 +35,7 @@ class Menu:
         self.font = pygame.font.Font('Amatic-Bold.ttf', 180)
         self.title = self.font.render('Teeko AI', True, BLACK)
         self.title_rect = self.title.get_rect()
-        self.title_rect.center = (SCREEN_SIZE[0] / 2, 180)
+        self.title_rect.center = MENU_TITLE_POS
 
         self.index_difficulty_one = 1
         self.index_difficulty_two = 1
@@ -44,47 +43,34 @@ class Menu:
         self.playerone = Player(1, 0, 0)
         self.playertwo = Player(2, 1, 1)
 
-        self.color_btn_one = ColorChanger(self.surf, int((SCREEN_SIZE[0] - 700) / 2),
-                                          int((SCREEN_SIZE[1] - 30) / 2 + 30), 30,
-                                          COLORS[self.playerone.color_index])
-        self.color_btn_two = ColorChanger(self.surf, int((SCREEN_SIZE[0] - 700) / 2 + 550),
-                                          int((SCREEN_SIZE[1] - 30) / 2 + 30),
-                                          30,
-                                          COLORS[self.playertwo.color_index])
+        self.color_btn_one = ColorChanger(self.surf, COLOR_BTN_ONE_POS, 30, COLORS[self.playerone.color_index])
+        self.color_btn_two = ColorChanger(self.surf, COLOR_BTN_TWO_POS, 30, COLORS[self.playertwo.color_index])
 
-        self.tick_zone_one = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
-                                    PLAYERTYPE[self.playerone.ptype],
-                                    BACKGROUND)
+        self.tick_zone_one = Button(TICK_ZONE_ONE_POS, TICK_ZONE_ONE_SIZE, PLAYERTYPE[self.playerone.ptype], BACKGROUND)
 
-        self.tick_zone_two = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 30) / 2 + 100, 150, 50,
-                                    PLAYERTYPE[self.playertwo.ptype],
-                                    BACKGROUND)
+        self.tick_zone_two = Button(TICK_ZONE_TWO_POS, TICK_ZONE_TWO_SIZE, PLAYERTYPE[self.playertwo.ptype], BACKGROUND)
 
-        self.rulesbtn = Button(SCREEN_SIZE[0] - 170, SCREEN_SIZE[1] - 70, 150, 50, "Rules", BACKGROUND)
+        self.rulesbtn = Button(RULES_BTN_POS, RULES_BTN_SIZE, "Rules", BACKGROUND)
         self.displayrules = False
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
         self.player_one = self.font.render('Player 1', True, BLACK)
         self.player_one_rect = self.player_one.get_rect()
-        self.player_one_rect.center = (int((SCREEN_SIZE[0] - 500) / 2), (SCREEN_SIZE[1] - 30) / 2 + 30)
+        self.player_one_rect.center = MENU_PLAYER_ONE_CENTER
 
         self.player_two = self.font.render('Player 2', True, BLACK)
         self.player_two_rect = self.player_two.get_rect()
-        self.player_two_rect.center = (int((SCREEN_SIZE[0] - 300) / 2 + 450), (SCREEN_SIZE[1] - 30) / 2 + 30)
+        self.player_two_rect.center = MENU_PLAYER_TWO_CENTER
 
-        self.start_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 230, 200, 50, 'Start',
-                                BACKGROUND)
-        self.AI_diff_one = Button((SCREEN_SIZE[0] - 700) / 2 - 50, (SCREEN_SIZE[1] - 30) / 2 + 170, 250, 50,
-                                  'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one],
-                                  BACKGROUND)
+        self.start_btn = Button(START_BTN_POS, START_BTN_SIZE, 'Start', BACKGROUND)
+        self.AI_diff_one = Button(IA_DIFF_ONE_POS, IA_DIFF_ONE_SIZE,
+                                  'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one], BACKGROUND)
         self.AI_diff_one.disable()
 
-        self.AI_diff_two = Button((SCREEN_SIZE[0] - 700) / 2 + 500, (SCREEN_SIZE[1] - 30) / 2 + 170, 250, 50,
-                                  'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two],
-                                  BACKGROUND)
+        self.AI_diff_two = Button(IA_DIFF_TWO_POS, IA_DIFF_TWO_SIZE,
+                                  'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two], BACKGROUND)
 
-        self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
-                                BACKGROUND)
+        self.leave_btn = Button(LEAVE_BTN_POS, LEAVE_BTN_SIZE, 'Leave', BACKGROUND)
 
     def displayrules(self):
         background_rules = pygame.Surface(SCREEN_SIZE)

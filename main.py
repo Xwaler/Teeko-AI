@@ -49,12 +49,11 @@ def main():
         if page_manager.current == game:
             game.update()
 
-        display.fill(BACKGROUND)
-        display.blit(page_manager.current.surf, (0, 0))
         page_manager.current.render()
 
+        page_manager.blit(display)
         pygame.display.update()
-        clock.tick(60)
+        clock.tick(45)
 
 
 if __name__ == '__main__':

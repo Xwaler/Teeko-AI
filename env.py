@@ -35,7 +35,6 @@ class Teeko:
         self.render_enabled = surf is not None
         self.surf = surf
         self.players_tokens = None
-        self.square_width = None
         self.font = None
         self.player_one = None
         self.player_one_rect = None
@@ -84,11 +83,10 @@ class Teeko:
             self.initRender()
 
     def initRender(self):
-        self.square_width = (SCREEN_SIZE[1] - 100) // GRID_SIZE
         self.players_tokens = []
         for k in range(2):
-            x = int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + (k * int(
-                self.square_width * GRID_SIZE + (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2
+            x = int((SCREEN_SIZE[0] - SQUARE_WIDTH * GRID_SIZE) / 4) + (k * int(
+                SQUARE_WIDTH * GRID_SIZE + (SCREEN_SIZE[0] - SQUARE_WIDTH * GRID_SIZE) / 2
             ))
             self.players_tokens.extend(
                 (k + 1, m + 1, TokenView(self.surf, x, m * (TOKEN_RADIUS * 2 + 30) + 250),
@@ -99,41 +97,34 @@ class Teeko:
 
         self.player_one = self.font.render('Player 1', True, BLACK)
         self.player_one_rect = self.player_one.get_rect()
-        self.player_one_rect.center = (int((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4), 150)
+        self.player_one_rect.center = GAME_PLAYER_ONE_CENTER
 
         self.player_two = self.font.render('Player 2', True, BLACK)
         self.player_two_rect = self.player_two.get_rect()
-        self.player_two_rect.center = (
-            int(3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 150)
+        self.player_two_rect.center = GAME_PLAYER_TWO_CENTER
 
         self.currentlyplaying = pygame.image.load("hourglass.png")
         self.angle = 0
 
-        self.back_btn = Button((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4 - 75, SCREEN_SIZE[1] - 80, 150, 50,
-                               '< Back', BACKGROUND)
+        self.back_btn = Button(BACK_BTN_POS, BACK_BTN_SIZE, '< Back', BACKGROUND)
 
-        self.plate = Plate(self.surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
-                           (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
-                           self.square_width * GRID_SIZE, self.square_width)
+        self.plate = Plate(self.surf, PLATE_POS, PLATE_W)
 
         self.error_txt_1 = self.font.render('You can\'t place your token here :/', True, BLACK)
         self.error_txt_1_rect = self.error_txt_1.get_rect()
-        self.error_txt_1_rect.center = (SCREEN_SIZE[0] / 2, 20)
+        self.error_txt_1_rect.center = ERROR_TXT_CENTER
         self.error_txt_2 = self.font.render('You can\'t move your tokens yet :/', True, BLACK)
         self.error_txt_2_rect = self.error_txt_2.get_rect()
-        self.error_txt_2_rect.center = (SCREEN_SIZE[0] / 2, 20)
+        self.error_txt_2_rect.center = ERROR_TXT_CENTER
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
         self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
         self.winner_annouced_rect = self.winner_annouced.get_rect()
-        self.winner_annouced_rect.center = ((SCREEN_SIZE[0]) / 2, (SCREEN_SIZE[1] - 400) / 2 + 150)
+        self.winner_annouced_rect.center = WINNER_CENTER
 
-        self.retry_btn = Button((SCREEN_SIZE[0] - 700) / 2, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Retry',
-                                BACKGROUND)
-        self.goto_menu = Button((SCREEN_SIZE[0] - 700) / 2 + 275, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50,
-                                'Go to Menu', BACKGROUND)
-        self.leave_game = Button((SCREEN_SIZE[0] - 700) / 2 + 550, (SCREEN_SIZE[1] - 400) / 2 + 300, 150, 50, 'Quit',
-                                 BACKGROUND)
+        self.retry_btn = Button(RETRY_BTN_POS, RETRY_BTN_SIZE, 'Retry', BACKGROUND)
+        self.goto_menu = Button(MENU_BTN_POS, MENU_BTN_SIZE, 'Go to Menu', BACKGROUND)
+        self.leave_game = Button(QUIT_BTN_POS, QUIT_BTN_SIZE, 'Quit', BACKGROUND)
 
         self.selected_token = None
         self.selection_offset_y = 0
@@ -520,13 +511,11 @@ class Teeko:
         if self.turn_to.idt == 1:
             self.angle = (self.angle + 2) % 360
             rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
-            self.currentlyplaying_rect = rotated_surf.get_rect(
-                center=((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4, 60))
+            self.currentlyplaying_rect = rotated_surf.get_rect(center=HOURGLASS_CENTER_ONE)
         else:
             self.angle = (self.angle + 2) % 360
             rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
-            self.currentlyplaying_rect = rotated_surf.get_rect(
-                center=((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 60))
+            self.currentlyplaying_rect = rotated_surf.get_rect(center=HOURGLASS_CENTER_TWO)
 
         self.surf.blit(rotated_surf, self.currentlyplaying_rect)
         pygame.display.flip()
@@ -552,7 +541,7 @@ class Teeko:
             bandeau = pygame.Surface((SCREEN_SIZE[0], 400))
             bandeau.fill(BACKGROUND)
             bandeau.set_alpha(210)
-            self.surf.blit(bandeau, (0, (SCREEN_SIZE[1] - 400) / 2))
+            self.surf.blit(bandeau, BANDEAU_POSITION)
 
             if self.retry_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
                 self.retry_btn.hover(self.surf)
