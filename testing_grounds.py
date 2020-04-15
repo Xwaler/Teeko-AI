@@ -10,7 +10,7 @@ env.addToken(env.players[0], 15)
 env.addToken(env.players[0], 10)
 env.addToken(env.players[1], 5)
 
-print(env.print())
+
 print(env.getAligned(env.players[0]))
 
 

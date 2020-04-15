@@ -1,5 +1,5 @@
 Welcome to Teeko AI !
-The rules in this game are very simple. Each player is going to place 4 tokens one by one.
-Once all tokens are placed, you'll be able to move one of your token in a 1 slot range.
-In order to win, you have to align 4 tokens or create a 2x2 square.
-Once you achieve this, you are the winner !
+The rules of this game are very simple. Each player places, one by one, 4 tokens on the board.
+Once all the tokens are in place, each turn, you can move one of your token one square in any direction.
+If you manage to align your 4 tokens or create a 2x2 square with them, you are the winner !
+May the best man win
