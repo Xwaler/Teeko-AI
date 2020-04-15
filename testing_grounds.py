@@ -1,11 +1,15 @@
 from env import Teeko
+import numpy as np
 
 env = Teeko()
 env.reset()
 
-for _ in range(4):
-    env.update()
-    while env.calculating():
-        continue
-    env.update()
-env.print()
+env.addToken(env.players[0], 20)
+env.addToken(env.players[0], 15)
+env.addToken(env.players[0], 10)
+env.addToken(env.players[1], 5)
+
+
+print(env.print())
+print(env.getAligned(env.players[0]))
+

@@ -144,7 +144,9 @@ class Teeko:
 
     def getAligned(self, player):
         longest_line = 1
+
         for token in player.tokens:
+            L_shape_direction = 0
             module_current_pos = token % 5
             div_current_pos = token // 5
 
@@ -158,11 +160,6 @@ class Teeko:
                     module_current_pos = token % 5
                     current_pos = token
                     new_pos = token + direction
-
-                    previous_pos = token - direction
-                    space_before = 0 <= previous_pos < 25 and (
-                            (module_current_pos != 0 and module_current_pos != 4) or
-                            (current_pos + new_pos) % 5 != 4) and self.grid[previous_pos] == 0
 
                     while 0 <= new_pos < 25 \
                             and ((module_current_pos != 0 and module_current_pos != 4) or
@@ -184,12 +181,85 @@ class Teeko:
                             space_used = True
 
                         else:
-                            if current_alignment < 4 and not space_before:
+                            previous_pos = token - direction
+                            space_before = 0 <= previous_pos < 25 and (
+                                    (module_current_pos != 0 and module_current_pos != 4) or
+                                    (current_pos + previous_pos) % 5 != 4) and self.grid[previous_pos] == 0
+
+                            if current_alignment != 4 and not space_before:
+                                if current_alignment == 2:
+                                    if L_shape_direction == 0:
+                                        if direction != 6:
+                                            L_shape_direction = direction
+                                    elif L_shape_direction == 1:
+                                        if direction == 5:
+                                            if self.grid[current_pos + 1] == player.idt:
+                                                return 4
+                                            else:
+                                                return 3
+                                        if direction == 6:
+                                            return 3
+                                        elif L_shape_direction == 4:
+                                            if direction == 5:
+                                                return 3
+                                            elif L_shape_direction == 5:
+                                                if direction == 6:
+                                                    return 3
+
                                 current_alignment = 1
+                            elif current_alignment == 2:
+
+                                if L_shape_direction == 0:
+                                    if direction != 6:
+                                        L_shape_direction = direction
+                                elif L_shape_direction == 1:
+                                    if direction == 5:
+                                        if self.grid[current_pos + 1] == player.idt:
+                                            return 4
+                                        else:
+                                            return 3
+                                    if direction == 6:
+                                        return 3
+                                    elif L_shape_direction == 4:
+                                        if direction == 5:
+                                            return 3
+                                        elif L_shape_direction == 5:
+                                            if direction == 6:
+                                                return 3
+
+                                current_pos = previous_pos
+                                module_current_pos = current_pos % 5
+                                previous_pos = previous_pos - direction
+
+                                space_before_before = 0 <= previous_pos < 25 and (
+                                    (module_current_pos != 0 and module_current_pos != 4) or
+                                    (current_pos + previous_pos) % 5 != 4) and self.grid[previous_pos] == 0
+
+                                if not space_before_before:
+                                    current_alignment = 1
                             break
 
                     if current_alignment > longest_line:
                         longest_line = current_alignment
+
+                    if current_alignment == 2:
+                        if L_shape_direction == 0:
+                            if direction != 6:
+                                L_shape_direction = direction
+                        elif L_shape_direction == 1:
+                            if direction == 5:
+                                if self.grid[token + 6] == player.idt:
+                                    return 4
+                                else:
+                                    return 3
+                            if direction == 6:
+                                return 3
+                            elif L_shape_direction == 4:
+                                if direction == 5:
+                                    return 3
+                                elif L_shape_direction == 5:
+                                    if direction == 6:
+                                        return 3
 
                     if longest_line > 2:
                         return longest_line
