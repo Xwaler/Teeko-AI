@@ -26,6 +26,7 @@ def getAligned(self, player):
 
             alignment_contain_zero = False
             zero_is_last = False
+            followed_by_two_0 = False
 
             current_cell = token
             module_current_cell = current_cell % 5
@@ -41,6 +42,7 @@ def getAligned(self, player):
                 if next_cell_value == 0:
 
                     if alignment_contain_zero:
+                        followed_by_two_0 = True
                         break
 
                     else:
@@ -96,26 +98,28 @@ def getAligned(self, player):
 
                     current_alignment = max(current_alignment, square_alignment)
                     if current_alignment == 2:
-                        current_cell = token
-                        module_current_cell = current_cell % 5
-
-                        next_cell = current_cell - direction
-
-                        IN_GRID = 0 <= next_cell < 25 and ((module_current_cell != 0 and module_current_cell != 4) or
-                                                           (current_cell + next_cell) % 5 != 4)
-                        if IN_GRID and env.grid[next_cell] == 0:
-                            current_cell = next_cell
+                        if not followed_by_two_0:
+                            current_cell = token
                             module_current_cell = current_cell % 5
 
                             next_cell = current_cell - direction
 
-                            IN_GRID = 0 <= next_cell < 25 and (
-                                        (module_current_cell != 0 and module_current_cell != 4) or
-                                        (current_cell + next_cell) % 5 != 4)
-                            if IN_GRID and env.grid[next_cell] != 0:
+                            IN_GRID = 0 <= next_cell < 25 and ((module_current_cell != 0 and module_current_cell != 4) or
+                                                               (current_cell + next_cell) % 5 != 4)
+                            if IN_GRID and env.grid[next_cell] == 0:
+                                if not zero_is_last:
+                                    current_cell = next_cell
+                                    module_current_cell = current_cell % 5
+
+                                    next_cell = current_cell - direction
+
+                                    IN_GRID = 0 <= next_cell < 25 and (
+                                                (module_current_cell != 0 and module_current_cell != 4) or
+                                                (current_cell + next_cell) % 5 != 4)
+                                    if IN_GRID and env.grid[next_cell] != 0:
+                                        current_alignment = 1
+                            else:
                                 current_alignment = 1
-                        else:
-                            current_alignment = 1
 
             if current_alignment > 2:
                 return current_alignment
