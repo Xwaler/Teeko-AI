@@ -10,10 +10,8 @@ class TokenView:
         self.surf = surf
         self.x, self.y = x, y
         self.initial_x, self.initial_y = x, y
-        self.color = None
 
     def render(self, color):
-        self.color = color
         pygame.draw.circle(self.surf, color, (self.x, self.y), TOKEN_RADIUS)
 
     def on_token(self, pos):
@@ -44,7 +42,7 @@ class PlayableZone:
         pygame.draw.circle(self.surf, BACKGROUND, (self.x, self.y), TOKEN_RADIUS + 4 - TOKEN_THICKNESS)
 
     def onPropzone(self, pos):
-        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS+10:
+        if math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS + 10:
             return True
         return False
 

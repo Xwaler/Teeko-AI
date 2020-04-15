@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from torch.nn import Module, Conv2d, Linear, Sigmoid
+from torch.nn import Module, Linear, Sigmoid
 
 from constants import DIRECTIONS
 

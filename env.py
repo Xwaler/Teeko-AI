@@ -551,6 +551,7 @@ class Teeko:
 
             bandeau = pygame.Surface((SCREEN_SIZE[0], 400))
             bandeau.fill(BACKGROUND)
+            bandeau.set_alpha(210)
             self.surf.blit(bandeau, (0, (SCREEN_SIZE[1] - 400) / 2))
 
             if self.retry_btn.get_rect().collidepoint(pygame.mouse.get_pos()):

@@ -60,7 +60,7 @@ class Menu:
                                     PLAYERTYPE[self.playertwo.ptype],
                                     BACKGROUND)
 
-        self.rulesbtn = Button(SCREEN_SIZE[0]-170,SCREEN_SIZE[1]-70,150,50,"Rules",BACKGROUND)
+        self.rulesbtn = Button(SCREEN_SIZE[0] - 170, SCREEN_SIZE[1] - 70, 150, 50, "Rules", BACKGROUND)
         self.displayrules = False
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
@@ -92,10 +92,9 @@ class Menu:
         background_rules.set_alpha(150)
         self.surf.blit(background_rules, (0, 0))
 
-        bandeau = pygame.Surface((SCREEN_SIZE[0]-200, SCREEN_SIZE[1]-200))
+        bandeau = pygame.Surface((SCREEN_SIZE[0] - 200, SCREEN_SIZE[1] - 200))
         bandeau.fill(BACKGROUND)
         self.surf.blit(bandeau, (100, 100))
-
 
     def parseEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
