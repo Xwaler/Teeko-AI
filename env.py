@@ -54,6 +54,7 @@ class Teeko:
         self.selection_offset_x = None
         self.dqn_agent = None
         self.game_ended = False
+        self.errortrigger = False
 
     def loadDQN(self):
         self.dqn_agent = DQNAgent()
@@ -111,6 +112,10 @@ class Teeko:
         self.plate = Plate(self.surf, (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 2,
                            (SCREEN_SIZE[1] - self.square_width * GRID_SIZE) / 2,
                            self.square_width * GRID_SIZE, self.square_width)
+
+        self.errortxt = self.font.render('You can\'t place your token here :/', True, BLACK)
+        self.errortxt_rect = self.errortxt.get_rect()
+        self.errortxt_rect.center = (SCREEN_SIZE[0]/2, 20)
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
         self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
@@ -478,6 +483,9 @@ class Teeko:
         self.surf.blit(self.player_one, self.player_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
 
+        if self.errortrigger:
+            self.surf.blit(self.errortxt, self.errortxt_rect)
+
         if self.turn_to.idt == 1:
             self.angle = (self.angle + 2) % 360
             rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
@@ -582,7 +590,10 @@ class Teeko:
 
                         self.selected_token = None
                         self.turn_to.has_played = True
+                        self.errortrigger = False
                         break
+                    else:
+                        self.errortrigger = True
 
                 if self.selected_token is not None:
                     self.selected_token.placeToken((self.selected_token.initial_x, self.selected_token.initial_y))

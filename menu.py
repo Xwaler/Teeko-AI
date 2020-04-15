@@ -60,7 +60,7 @@ class Menu:
                                     PLAYERTYPE[self.playertwo.ptype],
                                     BACKGROUND)
 
-        self.rulesbtn = Button(SCREEN_SIZE[0]-170,SCREEN_SIZE[1]-70,150,50,"Règles",BACKGROUND)
+        self.rulesbtn = Button(SCREEN_SIZE[0]-170,SCREEN_SIZE[1]-70,150,50,"Rules",BACKGROUND)
         self.displayrules = False
 
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
