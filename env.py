@@ -145,7 +145,6 @@ class Teeko:
                 continue
 
     def getAligned(self, player):
-        idt = player.idt
         longest_alignment = 1
 
         for token in player.tokens:
@@ -170,7 +169,6 @@ class Teeko:
                     next_cell_value = self.grid[next_cell]
 
                     if next_cell_value == 0:
-
                         if alignment_contain_zero:
                             followed_by_two_0 = True
                             break
@@ -179,9 +177,8 @@ class Teeko:
                             alignment_contain_zero = True
                             zero_is_last = True
 
-                    elif next_cell_value == idt:
+                    elif next_cell_value == player.idt:
                         zero_is_last = False
-
                         current_alignment += 1
 
                     else:
@@ -198,8 +195,10 @@ class Teeko:
                 if current_alignment == 4:
                     if alignment_contain_zero and not zero_is_last:
                         current_alignment = 3
+
                     else:
                         current_alignment = 4
+
                 elif current_alignment == 3:
                     if not alignment_contain_zero:
                         current_cell = token
@@ -209,14 +208,14 @@ class Teeko:
 
                         IN_GRID = 0 <= next_cell < 25 and ((module_current_cell != 0 and module_current_cell != 4) or
                                                            (current_cell + next_cell) % 5 != 4)
+
                         if IN_GRID and self.grid[next_cell] == 0:
                             current_alignment = 3
+
                         else:
                             current_alignment = 1
-
-                            square_alignment, l_shape_first_direction = self.Square_test(l_shape_first_direction,
-                                                                                         direction, token, idt)
-
+                            square_alignment, l_shape_first_direction = self.squareTest(l_shape_first_direction,
+                                                                                        direction, token, player.idt)
                             current_alignment = max(current_alignment, square_alignment)
 
                     else:
@@ -224,8 +223,8 @@ class Teeko:
 
                 elif current_alignment == 2:
                     if not alignment_contain_zero or zero_is_last:
-                        square_alignment, l_shape_first_direction = self.Square_test(l_shape_first_direction, direction,
-                                                                                     token, idt)
+                        square_alignment, l_shape_first_direction = self.squareTest(l_shape_first_direction, direction,
+                                                                                    token, player.idt)
 
                         current_alignment = max(current_alignment, square_alignment)
                         if current_alignment == 2:
@@ -238,6 +237,7 @@ class Teeko:
                                 IN_GRID = 0 <= next_cell < 25 and (
                                         (module_current_cell != 0 and module_current_cell != 4) or
                                         (current_cell + next_cell) % 5 != 4)
+
                                 if IN_GRID and self.grid[next_cell] == 0:
                                     if not zero_is_last:
                                         current_cell = next_cell
@@ -248,10 +248,13 @@ class Teeko:
                                         IN_GRID = 0 <= next_cell < 25 and (
                                                 (module_current_cell != 0 and module_current_cell != 4) or
                                                 (current_cell + next_cell) % 5 != 4)
+
                                         if not IN_GRID or self.grid[next_cell] != 0:
                                             current_alignment = 1
+
                                 else:
                                     current_alignment = 1
+
                     elif alignment_contain_zero:
                         current_alignment = 1
 
@@ -263,13 +266,14 @@ class Teeko:
 
         return longest_alignment
 
-    def Square_test(self, l_shape_first_direction, direction, token, idt):
-
+    def squareTest(self, l_shape_first_direction, direction, token, idt):
         current_alignment = 3
+
         if l_shape_first_direction == 0:
             current_alignment = 1
             if direction != 6:
                 l_shape_first_direction = direction
+
         elif LSTTT[l_shape_first_direction] != direction:
             current_alignment = 1
             if direction == 5 and l_shape_first_direction == 1:
@@ -278,10 +282,12 @@ class Teeko:
                     current_alignment = 4
                 elif fourth_cell_value == 0:
                     current_alignment = 3
+
         else:
             fourth_cell_value = self.grid[token + LSFTT[l_shape_first_direction]]
             if fourth_cell_value != 0:
                 current_alignment = 1
+
         return current_alignment, l_shape_first_direction
 
     def addToken(self, player, pos):
@@ -499,6 +505,8 @@ class Teeko:
         return self.grid / 2  # NORMALIZED TO 1
 
     def render(self):
+        mouse_pos = pygame.mouse.get_pos()
+
         self.surf.fill(BACKGROUND)
         self.surf.blit(self.player_one, self.player_one_rect)
         self.surf.blit(self.player_two, self.player_two_rect)
@@ -518,7 +526,6 @@ class Teeko:
             self.currentlyplaying_rect = rotated_surf.get_rect(center=HOURGLASS_CENTER_TWO)
 
         self.surf.blit(rotated_surf, self.currentlyplaying_rect)
-        pygame.display.flip()
 
         if self.back_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
             self.back_btn.hover(self.surf)
@@ -543,17 +550,17 @@ class Teeko:
             bandeau.set_alpha(210)
             self.surf.blit(bandeau, BANDEAU_POSITION)
 
-            if self.retry_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            if self.retry_btn.get_rect().collidepoint(mouse_pos):
                 self.retry_btn.hover(self.surf)
             else:
                 self.retry_btn.drawRect(self.surf)
 
-            if self.goto_menu.get_rect().collidepoint(pygame.mouse.get_pos()):
+            if self.goto_menu.get_rect().collidepoint(mouse_pos):
                 self.goto_menu.hover(self.surf)
             else:
                 self.goto_menu.drawRect(self.surf)
 
-            if self.leave_game.get_rect().collidepoint(pygame.mouse.get_pos()):
+            if self.leave_game.get_rect().collidepoint(mouse_pos):
                 self.leave_game.hover(self.surf)
             else:
                 self.leave_game.drawRect(self.surf)
@@ -561,35 +568,35 @@ class Teeko:
             self.surf.blit(self.winner_annouced, self.winner_annouced_rect)
 
     def parseEvent(self, event):
-        pos = pygame.mouse.get_pos()
+        mouse_pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.back_btn.on_button(pos):
+            if self.back_btn.on_button(mouse_pos):
                 return CODE_TO_MENU
 
             if self.game_ended:
-                if self.goto_menu.on_button(pos):
+                if self.goto_menu.on_button(mouse_pos):
                     self.game_ended = False
                     return CODE_TO_MENU
 
-                if self.leave_game.on_button(pos):
+                if self.leave_game.on_button(mouse_pos):
                     pygame.quit()
                     self.killMinMax()
                     quit()
 
-                if self.retry_btn.on_button(pos):
+                if self.retry_btn.on_button(mouse_pos):
                     self.game_ended = False
                     return CODE_TO_GAME
 
             for token_view in self.players_tokens:
-                if token_view[2].on_token(pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
+                if token_view[2].on_token(mouse_pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
                     self.selected_token = token_view[2]
-                    self.selection_offset_x = token_view[2].x - pos[0]
-                    self.selection_offset_y = token_view[2].y - pos[1]
+                    self.selection_offset_x = token_view[2].x - mouse_pos[0]
+                    self.selection_offset_y = token_view[2].y - mouse_pos[1]
 
         if event.type == pygame.MOUSEBUTTONUP:
             if self.selected_token is not None:
                 for drop_zone in self.plate.playable_zones:
-                    if drop_zone.isAvailable() and drop_zone.onPropzone(pos) and \
+                    if drop_zone.isAvailable() and drop_zone.onPropzone(mouse_pos) and \
                             drop_zone.legitMove(self.selected_token, len(self.turn_to.tokens)):
                         current_drop_zone, i = None, 0
                         while i < len(self.plate.playable_zones) and current_drop_zone is None:
@@ -622,7 +629,8 @@ class Teeko:
 
         if event.type == pygame.MOUSEMOTION:
             if self.selected_token is not None:
-                self.selected_token.drag((self.selection_offset_x + pos[0], self.selection_offset_y + pos[1]))
+                self.selected_token.drag((self.selection_offset_x + mouse_pos[0],
+                                          self.selection_offset_y + mouse_pos[1]))
 
     def rectGrid(self):
         return self.grid.reshape((GRID_SIZE, GRID_SIZE))

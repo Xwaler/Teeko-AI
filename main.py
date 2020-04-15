@@ -53,7 +53,7 @@ def main():
 
         page_manager.blit(display)
         pygame.display.update()
-        clock.tick(45)
+        clock.tick(60)
 
 
 if __name__ == '__main__':
