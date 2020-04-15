@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 
 from constants import *
-# from dqn import DQNAgent
+from dqn import DQNAgent
 from tools import randomChoice
 from views import Plate, TokenView, Button
 
@@ -41,7 +41,6 @@ class Teeko:
         self.player_two_rect = None
         self.back_btn = None
         self.plate = None
-
         self.currentlyplaying = None
         self.currentlyplaying_rect = None
         self.angle = None
@@ -57,8 +56,7 @@ class Teeko:
         self.game_ended = False
 
     def loadDQN(self):
-        # self.dqn_agent = DQNAgent()
-        pass
+        self.dqn_agent = DQNAgent()
 
     def reset(self, players=None, index_difficulty=(1, 1)):
         self.grid = np.zeros(GRID_SIZE * GRID_SIZE, dtype=np.int)
@@ -146,7 +144,9 @@ class Teeko:
 
     def getAligned(self, player):
         longest_line = 1
+
         for token in player.tokens:
+            L_shape_direction = 0
             module_current_pos = token % 5
             div_current_pos = token // 5
 
@@ -160,11 +160,6 @@ class Teeko:
                     module_current_pos = token % 5
                     current_pos = token
                     new_pos = token + direction
-
-                    previous_pos = token - direction
-                    space_before = 0 <= previous_pos < 25 and (
-                            (module_current_pos != 0 and module_current_pos != 4) or
-                            (current_pos + new_pos) % 5 != 4) and self.grid[previous_pos] == 0
 
                     while 0 <= new_pos < 25 \
                             and ((module_current_pos != 0 and module_current_pos != 4) or
@@ -186,12 +181,85 @@ class Teeko:
                             space_used = True
 
                         else:
-                            if current_alignment < 4 and not space_before:
+                            previous_pos = token - direction
+                            space_before = 0 <= previous_pos < 25 and (
+                                    (module_current_pos != 0 and module_current_pos != 4) or
+                                    (current_pos + previous_pos) % 5 != 4) and self.grid[previous_pos] == 0
+
+                            if current_alignment != 4 and not space_before:
+                                if current_alignment == 2:
+                                    if L_shape_direction == 0:
+                                        if direction != 6:
+                                            L_shape_direction = direction
+                                    elif L_shape_direction == 1:
+                                        if direction == 5:
+                                            if self.grid[current_pos + 1] == player.idt:
+                                                return 4
+                                            else:
+                                                return 3
+                                        if direction == 6:
+                                            return 3
+                                        elif L_shape_direction == 4:
+                                            if direction == 5:
+                                                return 3
+                                            elif L_shape_direction == 5:
+                                                if direction == 6:
+                                                    return 3
+
                                 current_alignment = 1
+                            elif current_alignment == 2:
+
+                                if L_shape_direction == 0:
+                                    if direction != 6:
+                                        L_shape_direction = direction
+                                elif L_shape_direction == 1:
+                                    if direction == 5:
+                                        if self.grid[current_pos + 1] == player.idt:
+                                            return 4
+                                        else:
+                                            return 3
+                                    if direction == 6:
+                                        return 3
+                                    elif L_shape_direction == 4:
+                                        if direction == 5:
+                                            return 3
+                                        elif L_shape_direction == 5:
+                                            if direction == 6:
+                                                return 3
+
+                                current_pos = previous_pos
+                                module_current_pos = current_pos % 5
+                                previous_pos = previous_pos - direction
+
+                                space_before_before = 0 <= previous_pos < 25 and (
+                                    (module_current_pos != 0 and module_current_pos != 4) or
+                                    (current_pos + previous_pos) % 5 != 4) and self.grid[previous_pos] == 0
+
+                                if not space_before_before:
+                                    current_alignment = 1
                             break
 
                     if current_alignment > longest_line:
                         longest_line = current_alignment
+
+                    if current_alignment == 2:
+                        if L_shape_direction == 0:
+                            if direction != 6:
+                                L_shape_direction = direction
+                        elif L_shape_direction == 1:
+                            if direction == 5:
+                                if self.grid[token + 6] == player.idt:
+                                    return 4
+                                else:
+                                    return 3
+                            if direction == 6:
+                                return 3
+                            elif L_shape_direction == 4:
+                                if direction == 5:
+                                    return 3
+                                elif L_shape_direction == 5:
+                                    if direction == 6:
+                                        return 3
 
                     if longest_line > 2:
                         return longest_line
@@ -389,10 +457,9 @@ class Teeko:
                     self.minmax_thread.start()
 
                 elif self.turn_to.ptype == 2:
-                    # preds = self.dqn_agent.predict(self.getState())
-                    # move = self.predsToMove(preds)
-                    # self.makeMove(move)
-                    pass
+                    preds = self.dqn_agent.predict(self.getState())
+                    move = self.dqn_agent.predsToMove(preds)
+                    self.makeMove(move)
 
             else:
                 print(f'P{self.turn_to.idt} align : {self.getAligned(self.turn_to)}, tokens : {self.turn_to.tokens}')
@@ -404,17 +471,7 @@ class Teeko:
                 self.turn_to = self.players[abs(self.turn_to.idt - 2)]
 
     def getState(self):
-        # TODO: RETURNS AN ARRAY REPRESENTATION OF THE GAME STATE
-        pass
-
-    def predsToMove(self, preds):
-        # TODO: CONVERTS AN ARRAY OF PROBABILITIES TO A MOVE
-        pass
-
-    def moveToPreds(self, move):
-        # TODO: CONVERTS A MOVE TO A PERFECT ARRAY WITH THE SHAPE OF THE NETWORK'S OUTPUT,
-        #  MUST REPRESENT THE OBJECTIVE THAT THE NETWORK MUST ACHIEVE
-        pass
+        return self.grid / 2  # NORMALIZED TO 1
 
     def render(self):
         self.surf.fill(BACKGROUND)
@@ -422,15 +479,17 @@ class Teeko:
         self.surf.blit(self.player_two, self.player_two_rect)
 
         if self.turn_to.idt == 1:
-            self.angle = (self.angle + 2)%360
-            rotated_surf = pygame.transform.rotate(self.currentlyplaying,self.angle)
-            self.currentlyplaying_rect = rotated_surf.get_rect(center=((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4,60))
+            self.angle = (self.angle + 2) % 360
+            rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
+            self.currentlyplaying_rect = rotated_surf.get_rect(
+                center=((SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4, 60))
         else:
             self.angle = (self.angle + 2) % 360
             rotated_surf = pygame.transform.rotate(self.currentlyplaying, self.angle)
-            self.currentlyplaying_rect = rotated_surf.get_rect(center=((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 60))
+            self.currentlyplaying_rect = rotated_surf.get_rect(
+                center=((3 * (SCREEN_SIZE[0] - self.square_width * GRID_SIZE) / 4) + self.square_width * GRID_SIZE, 60))
 
-        self.surf.blit(rotated_surf,self.currentlyplaying_rect)
+        self.surf.blit(rotated_surf, self.currentlyplaying_rect)
         pygame.display.flip()
 
         if self.back_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
@@ -511,6 +570,9 @@ class Teeko:
                                 current_drop_zone = iter_drop_zone
                             i += 1
                         if current_drop_zone is not None:
+                            if len(self.turn_to.tokens) < 4:
+                                break
+
                             self.removeToken(self.turn_to, 5 * current_drop_zone.ordonne + current_drop_zone.abscisse)
                             current_drop_zone.available = True
 
