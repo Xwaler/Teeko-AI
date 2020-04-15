@@ -60,6 +60,9 @@ class Menu:
                                     PLAYERTYPE[self.playertwo.ptype],
                                     BACKGROUND)
 
+        self.rulesbtn = Button(SCREEN_SIZE[0]-170,SCREEN_SIZE[1]-70,150,50,"Règles",BACKGROUND)
+        self.displayrules = False
+
         self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
         self.player_one = self.font.render('Player 1', True, BLACK)
         self.player_one_rect = self.player_one.get_rect()
@@ -83,12 +86,26 @@ class Menu:
         self.leave_btn = Button((SCREEN_SIZE[0] - 200) / 2, (SCREEN_SIZE[1] - 50) / 2 + 300, 200, 50, 'Leave',
                                 BACKGROUND)
 
+    def displayrules(self):
+        background_rules = pygame.Surface(SCREEN_SIZE)
+        background_rules.fill(GRAY)
+        background_rules.set_alpha(150)
+        self.surf.blit(background_rules, (0, 0))
+
+        bandeau = pygame.Surface((SCREEN_SIZE[0]-200, SCREEN_SIZE[1]-200))
+        bandeau.fill(BACKGROUND)
+        self.surf.blit(bandeau, (100, 100))
+
+
     def parseEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
 
             if self.start_btn.on_button(pos):
                 return CODE_TO_GAME
+
+            if self.rulesbtn.on_button(pos):
+                return CODE_TO_RULES
 
             if self.AI_diff_one.on_button(pos) and not self.AI_diff_one.isDisabled():
                 if self.index_difficulty_one < 2:
@@ -185,6 +202,11 @@ class Menu:
             self.leave_btn.hover(self.surf)
         else:
             self.leave_btn.drawRect(self.surf)
+
+        if self.rulesbtn.get_rect().collidepoint(pygame.mouse.get_pos()):
+            self.rulesbtn.hover(self.surf)
+        else:
+            self.rulesbtn.drawRect(self.surf)
 
         if self.color_btn_one.is_inside(pygame.mouse.get_pos()):
             self.color_btn_one.hover(COLORS[self.playerone.color_index])

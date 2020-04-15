@@ -5,6 +5,7 @@ import pygame
 from constants import *
 from env import Teeko
 from menu import Menu
+from rules import Rules
 from views import PageManager
 
 
@@ -21,6 +22,7 @@ def main():
     display = pygame.display.set_mode(SCREEN_SIZE)
     game = Teeko(pygame.Surface(SCREEN_SIZE))
     menu = Menu(pygame.Surface(SCREEN_SIZE))
+    rules = Rules(pygame.Surface(SCREEN_SIZE))
     page_manager.setPage(menu)
 
     while True:
@@ -40,6 +42,9 @@ def main():
             elif code == CODE_TO_MENU:
                 game.killMinMax()
                 page_manager.current = menu
+
+            elif code == CODE_TO_RULES:
+                page_manager.current = rules
 
         if page_manager.current == game:
             game.update()
