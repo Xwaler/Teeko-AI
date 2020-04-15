@@ -257,7 +257,7 @@ class Teeko:
                                         IN_GRID = 0 <= next_cell < 25 and (
                                                 (module_current_cell != 0 and module_current_cell != 4) or
                                                 (current_cell + next_cell) % 5 != 4)
-                                        if IN_GRID and self.grid[next_cell] != 0:
+                                        if not IN_GRID or self.grid[next_cell] != 0:
                                             current_alignment = 1
                                 else:
                                     current_alignment = 1
