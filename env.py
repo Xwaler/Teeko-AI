@@ -31,6 +31,7 @@ class Teeko:
         self.turn_to = None
         self.minmax_thread = None
         self.kill_thread = False
+        self.turn = None
 
         self.render_enabled = surf is not None
         self.surf = surf
@@ -78,6 +79,7 @@ class Teeko:
 
         self.minmax_thread = None
         self.kill_thread = False
+        self.turn = 0
 
         if self.render_enabled:
             self.initRender()
@@ -485,8 +487,14 @@ class Teeko:
         if not self.game_ended:
             if not self.turn_to.has_played:
                 if self.turn_to.ptype == 1 and not self.calculating():
-                    self.minmax_thread = threading.Thread(target=self.AI_handler)
-                    self.minmax_thread.start()
+                    if self.turn != 0:
+                        self.minmax_thread = threading.Thread(target=self.AI_handler)
+                        self.minmax_thread.start()
+
+                    else:
+                        self.makeMove([0, np.random.randint(GRID_SIZE * GRID_SIZE)
+                                       if self.index_difficulty[self.turn_to.idt - 1] != 2
+                                       else 12, 0])
 
                 elif self.turn_to.ptype == 2:
                     preds = self.dqn_agent.predict(self.getState())
@@ -494,6 +502,7 @@ class Teeko:
                     self.makeMove(move)
 
             else:
+                self.turn += 1
                 print(f'P{self.turn_to.idt} align : {self.getAligned(self.turn_to)}, tokens : {self.turn_to.tokens}')
 
                 if self.over():
