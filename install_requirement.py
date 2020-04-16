@@ -1,16 +1,36 @@
-import os
+from subprocess import Popen, PIPE, DEVNULL
 
 
 def install():
-    interpreter = input('\nInstalling requirement for ?\n0: pip\n1: conda\n>> ')
+    interpreter = None
+    try:
+        Popen(['pip'], stdout=DEVNULL)
+        interpreter = 'pip'
+    except FileNotFoundError:
+        print('Pip not found')
+        try:
+            Popen(['conda'], stdout=DEVNULL)
+            interpreter = 'conda'
+        except FileNotFoundError:
+            print('Conda not found, exiting...')
+            quit()
 
-    if interpreter == '0':
-        os.system('pip install pygame numpy torch==1.4.0+cpu torchvision==0.5.0+cpu '
-                  '-f https://download.pytorch.org/whl/torch_stable.html')
-    elif interpreter == '1':
-        os.system('conda install numpy pygame pytorch torchvision cpuonly -c pytorch')
+    Popen([interpreter, 'install', 'pygame', 'numpy'])
+
+    p = Popen([interpreter, 'list'], stdout=PIPE)
+    stdout, _ = p.communicate()
+
+    if b'torch' in stdout:
+        print('Requirement already satisfied: pytorch')
+
     else:
-        install()
+        print('Installing pytorch...')
+        if interpreter == 'pip':
+            Popen([interpreter, 'install', 'torch==1.4.0+cpu', 'torchvision==0.5.0+cpu',
+                   '-f', 'https://download.pytorch.org/whl/torch_stable.html'])
+
+        else:
+            Popen([interpreter, 'install', 'pytorch', 'torchvision', 'cpuonly', '-c', 'pytorch'])
 
 
 if __name__ == '__main__':
