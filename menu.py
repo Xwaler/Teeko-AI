@@ -158,6 +158,7 @@ class Menu:
 
     def render(self):
         self.surf.fill(BACKGROUND)
+
         if self.start_btn.get_rect().collidepoint(pygame.mouse.get_pos()):
             self.start_btn.hover(self.surf)
         else:

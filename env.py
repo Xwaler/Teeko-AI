@@ -85,11 +85,12 @@ class Teeko:
     def initRender(self):
         self.players_tokens = []
         for k in range(2):
-            x = int((SCREEN_SIZE[0] - SQUARE_WIDTH * GRID_SIZE) / 4) + (k * int(
+            x = (SCREEN_SIZE[0] - SQUARE_WIDTH * GRID_SIZE) // 4 + (k * int(
                 SQUARE_WIDTH * GRID_SIZE + (SCREEN_SIZE[0] - SQUARE_WIDTH * GRID_SIZE) / 2
             ))
             self.players_tokens.extend(
-                (k + 1, m + 1, TokenView(self.surf, x, m * (TOKEN_RADIUS * 2 + 30) + 250),
+                (k + 1, m + 1, TokenView(self.surf, x, m * (TOKEN_RADIUS * 2 + 30) + 250,
+                                         COLORS[self.players[k].color_index]),
                  self.players[k].ptype != 0) for m in range(4)
             )
 
@@ -535,9 +536,9 @@ class Teeko:
         self.plate.render()
         for token_view in self.players_tokens:
             if token_view[0] == 1:
-                token_view[2].render(COLORS[self.players[0].color_index])
+                token_view[2].render()
             elif token_view[0] == 2:
-                token_view[2].render(COLORS[self.players[1].color_index])
+                token_view[2].render()
 
         if self.game_ended:
             background_end = pygame.Surface(SCREEN_SIZE)

@@ -10,10 +10,6 @@ SURROUNDING = [1, 4, 5, 6]
 LSTTT = [0, 6, 0, 0, 5, 6]
 LSFTT = [0, 5, 0, 0, -1, 1]
 
-# ALIGNEMENTS = {4: [[1, 1, 1, 1, -1]],
-#                3: [[1, 1, 1, 0, -1], [0, 1, 1, 1, -1], [-1, 1, 1, 1, 0], [1, 0, 1, 1, -1], [1, 1, 0, 1, -1]],
-#                2: [[1, 1, -1, -1, -1], [-1, 1, 1, -1, -1]]}
-
 DIFFICULTY = ['Easy', 'Normal', 'Hard']
 PLAYERTYPE = ['Humain', 'AI', 'Learning']
 MAX_DEPTH = [3, 4, 5]
@@ -22,6 +18,9 @@ SCREEN_SIZE = (1200, 750)
 SQUARE_WIDTH = (SCREEN_SIZE[1] - 100) // GRID_SIZE
 TOKEN_RADIUS = 40
 TOKEN_THICKNESS = 2
+
+FPS = 60
+ANIMATION_SPEED = SCREEN_SIZE[0] // (FPS / 4)
 
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)

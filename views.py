@@ -6,13 +6,14 @@ from constants import *
 
 
 class TokenView:
-    def __init__(self, surf, x, y):
+    def __init__(self, surf, x, y, color):
         self.surf = surf
         self.x, self.y = x, y
         self.initial_x, self.initial_y = x, y
+        self.color = color
 
-    def render(self, color):
-        pygame.draw.circle(self.surf, color, (self.x, self.y), TOKEN_RADIUS)
+    def render(self):
+        pygame.draw.circle(self.surf, self.color, (self.x, self.y), TOKEN_RADIUS)
 
     def on_token(self, pos):
         return math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS
@@ -59,23 +60,21 @@ class Plate:
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 self.playable_zones.append(
-                    PlayableZone(self.surf, (i * SQUARE_WIDTH + SQUARE_WIDTH // 2) + int(
-                        (SCREEN_SIZE[0] - self.w) / 2),
-                                 j * SQUARE_WIDTH + SQUARE_WIDTH // 2 + int(
-                                     (SCREEN_SIZE[1] - self.w) / 2), i, j))
+                    PlayableZone(self.surf, (i * SQUARE_WIDTH + SQUARE_WIDTH // 2) + (SCREEN_SIZE[0] - self.w) // 2,
+                                 j * SQUARE_WIDTH + SQUARE_WIDTH // 2 + (SCREEN_SIZE[1] - self.w) // 2, i, j))
 
     def render(self):
         pygame.draw.rect(self.surf, BLACK, (self.x, self.y, self.w, self.w), 3)
         for j in range(GRID_SIZE):
             for i in range(GRID_SIZE):
                 pygame.draw.line(self.surf, BLACK, (self.playable_zones[i + j * 5].x, self.playable_zones[i + j * 5].y),
-                                 (self.playable_zones[len(self.playable_zones) - 1 - i * 5 - j].x,
-                                  self.playable_zones[len(self.playable_zones) - 1 - i * 5 - j].y), 5)
+                                 (self.playable_zones[- 1 - i * 5 - j].x,
+                                  self.playable_zones[- 1 - i * 5 - j].y), 5)
                 pygame.draw.line(self.surf, BLACK, (self.playable_zones[i + j * 5].x, self.playable_zones[i + j * 5].y),
                                  (self.playable_zones[i + i * 4 + j].x, self.playable_zones[i + i * 4 + j].y), 5)
             pygame.draw.line(self.surf, BLACK, (self.playable_zones[j].x, self.playable_zones[j].y), (
-                self.playable_zones[len(self.playable_zones) - 5 + j].x,
-                self.playable_zones[len(self.playable_zones) - 5 + j].y), 5)
+                self.playable_zones[- 5 + j].x,
+                self.playable_zones[- 5 + j].y), 5)
             pygame.draw.line(self.surf, BLACK, (self.playable_zones[j * 5].x, self.playable_zones[j * 5].y),
                              (self.playable_zones[4 + j * 5].x, self.playable_zones[4 + j * 5].y), 5)
 
@@ -130,12 +129,28 @@ class Button:
 class PageManager:
     def __init__(self):
         self.current = None
+        self.animation_counter = 0
 
     def setPage(self, page):
         self.current = page
 
+    def transitionTo(self, page, reverse=False):
+        self.current = page
+        self.animation_counter = -SCREEN_SIZE[0] if reverse else SCREEN_SIZE[0]
+
     def parseEvent(self, event):
         self.current.parseEvent(event)
 
+    def ready(self):
+        return self.animation_counter == 0
+
     def blit(self, display):
-        display.blit(self.current.surf, (0, 0))
+        if not self.animation_counter:
+            display.blit(self.current.surf, (0, 0))
+        else:
+            display.blit(self.current.surf, (self.animation_counter, 0))
+
+            if self.animation_counter > 0:
+                self.animation_counter = max(self.animation_counter - ANIMATION_SPEED, 0)
+            else:
+                self.animation_counter = min(self.animation_counter + ANIMATION_SPEED, 0)

@@ -37,23 +37,23 @@ def main():
             if code == CODE_TO_GAME:
                 game.reset(players=(menu.playerone, menu.playertwo),
                            index_difficulty=(menu.index_difficulty_one, menu.index_difficulty_two))
-                page_manager.current = game
+                page_manager.transitionTo(game)
 
             elif code == CODE_TO_MENU:
                 game.killMinMax()
-                page_manager.current = menu
+                page_manager.transitionTo(menu, reverse=True)
 
             elif code == CODE_TO_RULES:
-                page_manager.current = rules
+                page_manager.transitionTo(rules)
 
-        if page_manager.current == game:
+        if page_manager.current == game and page_manager.ready():
             game.update()
 
         page_manager.current.render()
 
         page_manager.blit(display)
         pygame.display.update()
-        clock.tick(60)
+        clock.tick(FPS)
 
 
 if __name__ == '__main__':
