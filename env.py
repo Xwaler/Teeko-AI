@@ -5,8 +5,7 @@ import numpy as np
 import pygame
 
 from constants import *
-from dqn import DQNAgent
-from tools import randomChoice
+from tools import randomChoice, predsToMove
 from views import Plate, TokenView, Button
 
 
@@ -62,6 +61,7 @@ class Teeko:
         self.error_trigger_code = False
 
     def loadDQN(self):
+        from dqn import DQNAgent
         self.dqn_agent = DQNAgent()
 
     def reset(self, players=None, index_difficulty=(1, 1)):
@@ -492,13 +492,17 @@ class Teeko:
                         self.minmax_thread.start()
 
                     else:
-                        self.makeMove([0, np.random.randint(GRID_SIZE * GRID_SIZE)
-                                       if self.index_difficulty[self.turn_to.idt - 1] != 2
-                                       else 12, 0])
+                        self.makeMove(self.getRandomMove(self.turn_to.idt))
 
                 elif self.turn_to.ptype == 2:
-                    preds = self.dqn_agent.predict(self.getState())
-                    move = self.dqn_agent.predsToMove(preds)
+                    print(self.getState(reverse=self.turn_to.idt != 1))
+                    preds = self.dqn_agent.predict(self.getState(reverse=self.turn_to.idt != 1))
+                    print(preds)
+                    move = predsToMove(preds)
+                    print('Predicted move: ', move)
+                    if not self.moveIsCorrect(move, self.turn_to.idt):
+                        move = self.getRandomMove(self.turn_to.idt)
+                    print('Executed move: ', move)
                     self.makeMove(move)
 
             else:
@@ -511,8 +515,27 @@ class Teeko:
                 self.turn_to.has_played = False
                 self.turn_to = self.players[abs(self.turn_to.idt - 2)]
 
-    def getState(self):
-        return self.grid / 2  # NORMALIZED TO 1
+    def step(self, move, player_idt):
+        self.turn_to = self.players[player_idt - 1]
+        self.makeMove(move)
+        return self.over()
+
+    def getState(self, reverse=False):
+        return np.array([[1, 0] if k == 1 or (k == 2 and reverse) else
+                         [0, 1] if k == 2 or (k == 1 and reverse) else
+                         [0, 0] for k in self.grid], dtype=np.float)
+
+    def getRandomMove(self, player_idt):
+        return randomChoice(self.getAllMoves(self.players[player_idt - 1]))
+
+    def moveIsCorrect(self, move, player_idt):
+        for m in self.getAllMoves(self.players[player_idt - 1]):
+            if m[:2] == move[:2]:
+                if m[0] == 0:
+                    return True
+                elif m[2] == move[2]:
+                    return True
+        return False
 
     def render(self):
         mouse_pos = pygame.mouse.get_pos()
