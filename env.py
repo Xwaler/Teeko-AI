@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 
 from constants import *
-from tools import randomChoice, predsToMove
+from tools import randomChoice, predsToMove, moveToPreds
 from views import Plate, TokenView, Button
 
 
@@ -495,14 +495,10 @@ class Teeko:
                         self.makeMove(self.getRandomMove(self.turn_to.idt))
 
                 elif self.turn_to.ptype == 2:
-                    print(self.getState(reverse=self.turn_to.idt != 1))
-                    preds = self.dqn_agent.predict(self.getState(reverse=self.turn_to.idt != 1))
-                    print(preds)
-                    move = predsToMove(preds)
+                    print(self.getState(reverse=self.turn_to.idt == 2))
+                    preds = self.dqn_agent.predict(self.getState(reverse=self.turn_to.idt == 2))
+                    preds, move = self.correctMove(preds, self.turn_to.idt)
                     print('Predicted move: ', move)
-                    if not self.moveIsCorrect(move, self.turn_to.idt):
-                        move = self.getRandomMove(self.turn_to.idt)
-                    print('Executed move: ', move)
                     self.makeMove(move)
 
             else:
@@ -521,21 +517,17 @@ class Teeko:
         return self.over()
 
     def getState(self, reverse=False):
-        return np.array([[1, 0] if k == 1 or (k == 2 and reverse) else
-                         [0, 1] if k == 2 or (k == 1 and reverse) else
-                         [0, 0] for k in self.grid], dtype=np.float)
+        return np.array([[k == 1, k == 2][::-1 if reverse else 1] for k in self.grid], dtype=np.float)
 
     def getRandomMove(self, player_idt):
         return randomChoice(self.getAllMoves(self.players[player_idt - 1]))
 
-    def moveIsCorrect(self, move, player_idt):
-        for m in self.getAllMoves(self.players[player_idt - 1]):
-            if m[:2] == move[:2]:
-                if m[0] == 0:
-                    return True
-                elif m[2] == move[2]:
-                    return True
-        return False
+    def correctMove(self, preds, player_idt):
+        correct_moves = self.getAllMoves(self.players[player_idt - 1])
+        correct_preds_filter = np.sum([moveToPreds(move) for move in correct_moves], axis=0)
+        lower_bound = np.min(preds)
+        preds = ((preds - lower_bound) * correct_preds_filter) + lower_bound
+        return preds, predsToMove(preds)
 
     def render(self):
         mouse_pos = pygame.mouse.get_pos()

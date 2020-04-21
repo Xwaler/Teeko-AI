@@ -8,16 +8,18 @@ def randomChoice(a):
 
 
 def predsToMove(preds):
-    move = [np.argmax(preds[:2]),
-            np.argmax(preds[2:27]),
-            DIRECTIONS[np.argmax(preds[27:35])]]
+    if np.max(preds[:25]) > np.max(preds[25:]):
+        move = [0, np.argmax(preds[:25]), 0]
+    else:
+        p, d = divmod(np.argmax(preds[25:]), 8)
+        move = [1, p, DIRECTIONS[d]]
     return move
 
 
 def moveToPreds(move):
-    preds = np.zeros(2 + 25 + 8, dtype=np.float)
-    preds[move[0]] = 1.
-    preds[2 + move[1]] = 1.
-    if move[0] == 1:
-        preds[2 + 25 + DIRECTIONS.index(move[2])] = 1.
+    preds = np.zeros(25 + (25 * 8), dtype=np.float)
+    if move[0] == 0:
+        preds[move[1]] = 1.
+    else:
+        preds[25 + (move[1] * 8) + DIRECTIONS.index(move[2])] = 1.
     return preds
