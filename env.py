@@ -517,7 +517,14 @@ class Teeko:
         return self.over()
 
     def getState(self, reverse=False):
-        return np.array([[k == 1, k == 2][::-1 if reverse else 1] for k in self.grid], dtype=np.float)
+        state = np.zeros((3, 5, 5), dtype=np.float)
+        rect = self.rectGrid()
+        for j in range(GRID_SIZE):
+            for i in range(GRID_SIZE):
+                state[rect[j][i]][j][i] = 1.
+        if reverse:
+            state[[1, 2]] = state[[2, 1]]
+        return state
 
     def getRandomMove(self, player_idt):
         return randomChoice(self.getAllMoves(self.players[player_idt - 1]))

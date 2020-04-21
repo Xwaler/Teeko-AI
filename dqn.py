@@ -1,31 +1,22 @@
-import os
-import random
-import time
-from collections import deque
-
-import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.nn import Module, Linear, MSELoss
-from torch.optim import Adam
-from torch.utils.tensorboard import SummaryWriter
-
-from env import Teeko
-from tools import moveToPreds
+from torch.nn import Module, Conv2d, Linear, MSELoss
 
 
 class Net(Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.linear1 = Linear(25 * 2, 1_024)
-        self.linear2 = Linear(1_024, 1_024)
-        self.linear3 = Linear(1_024, 25 + (25 * 8))
+        self.conv1 = Conv2d(3, 64, kernel_size=5, padding=2)
+        self.conv2 = Conv2d(64, 64, kernel_size=3)
+        self.linear1 = Linear(64 * 3 * 3, 512)
+        self.out = Linear(512, 25 + (25 * 8))
 
     def forward(self, x):
-        x = x.view(-1, 25 * 2)
+        x = F.leaky_relu(self.conv1(x))
+        x = F.leaky_relu(self.conv2(x))
+        x = x.view(-1, 64 * 3 * 3)
         x = F.leaky_relu(self.linear1(x))
-        x = F.leaky_relu(self.linear2(x))
-        x = self.linear3(x)
+        x = self.out(x)
         return x
 
 
@@ -50,19 +41,31 @@ class DQNAgent(object):
 
 
 if __name__ == '__main__':
-    # if torch.cuda.is_available():
-    #     device = torch.device("cuda:0")
-    #     print("Running on the GPU")
-    # else:
-    device = torch.device("cpu")
-    print("Running on the CPU")
+    import os
+    import random
+    import time
+    from collections import deque
+    import numpy as np
+
+    from torch.utils.tensorboard import SummaryWriter
+    from torch.optim import Adam
+
+    from env import Teeko
+    from tools import moveToPreds
+
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+        print("Running on the GPU")
+    else:
+        device = torch.device("cpu")
+        print("Running on the CPU")
 
     env = Teeko()
 
     TARGET_INTERVAL = 32_768
 
-    MIN_HISTORY = 8_192
-    MAX_HISTORY = 32_768
+    MIN_HISTORY = 65_536
+    MAX_HISTORY = 131_072
     history = deque(maxlen=MAX_HISTORY)
 
     LOSS_HISTORY = 512
@@ -76,14 +79,14 @@ if __name__ == '__main__':
 
     epsilon = .80
     EPSILON_DECAY = .99995
-    MIN_EPSILON = .05
+    MIN_EPSILON = .02
 
     BATCH_SIZE = 64
     LR = 1e-4
     DISCOUNT = .9
 
-    WIN_REWARD = 10.
-    LOSE_REWARD = -10.
+    WIN_REWARD = 1.
+    LOSE_REWARD = -1.
     STEP_REWARD = 0
 
     policy_net = Net().to(device)
@@ -132,7 +135,7 @@ if __name__ == '__main__':
                 if last_states[player_idt - 1] is not None:
                     if player_idt != adversarial:
                         rewards.append(STEP_REWARD)
-                    game_history.append((last_states[player_idt - 1], last_preds[player_idt - 1],
+                    game_history.append((last_states[player_idt - 1][:], last_preds[player_idt - 1][:],
                                          STEP_REWARD, state.tolist(), done))
 
                 if (LOAD_NET or len(history) >= MIN_HISTORY) and np.random.random() > epsilon:
@@ -152,9 +155,9 @@ if __name__ == '__main__':
                     rewards.append(WIN_REWARD if player_idt != adversarial else LOSE_REWARD)
                     wins.append(player_idt != adversarial)
 
-                    game_history.append((state, preds, WIN_REWARD, state, done))
-                    game_history.append((last_states[abs(player_idt - 2)], last_preds[abs(player_idt - 2)],
-                                         LOSE_REWARD, state, done))
+                    game_history.append((state[:], preds[:], WIN_REWARD, state[:], done))
+                    game_history.append((last_states[abs(player_idt - 2)][:], last_preds[abs(player_idt - 2)][:],
+                                         LOSE_REWARD, state[:], done))
 
                     history.extend(game_history)
 
@@ -177,7 +180,7 @@ if __name__ == '__main__':
                                                     dtype=torch.float, device=device)
                         T_future_qs_list = target_net(T_new_states)
 
-                    X = torch.empty((BATCH_SIZE, 25, 2), dtype=torch.float, device=device)
+                    X = torch.empty((BATCH_SIZE, 3, 5, 5), dtype=torch.float, device=device)
                     y = torch.empty((BATCH_SIZE, 25 + (25 * 8)), dtype=torch.float, device=device)
 
                     for index, (T_current_state, T_pred, T_reward, T_new_state, T_done) in enumerate(minibatch):
@@ -207,10 +210,11 @@ if __name__ == '__main__':
 
                     if step % TARGET_INTERVAL == TARGET_INTERVAL - 1:
                         target_net.load_state_dict(policy_net.state_dict())
+                        print(f'Target updated at step {step}')
 
                     if step % SAVE_INTERVAL == SAVE_INTERVAL - 1:
                         torch.save(policy_net.state_dict(),
-                                   f'nets/net_{step:07d}_{sum(losses) / len(losses):.5f}.pth')
+                                   f'nets/net_{step:07d}_{sum(losses) / len(losses):.8f}.pth')
 
                 if done:
                     break
@@ -222,7 +226,7 @@ if __name__ == '__main__':
         stats_rewards = sum(rewards) / len(rewards) if len(rewards) != 0 else 0
         stats_wins = (sum(wins) / len(wins)) * 100 if len(wins) != 0 else 0
 
-        print(f'Training loss: {stats_training_loss:.5f} | '
+        print(f'Training loss: {stats_training_loss:.8f} | '
               f'Epsilon: {epsilon:.5f} | '
               f'Rewards: {stats_rewards:.5f} | '
               f'Wins: {stats_wins:.1f}% | '
