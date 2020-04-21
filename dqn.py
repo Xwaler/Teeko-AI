@@ -23,7 +23,7 @@ class Net(Module):
 class DQNAgent(object):
     def __init__(self):
         self.net = Net()
-        self.net.load_state_dict(torch.load('net.pth'))
+        self.net.load_state_dict(torch.load('net_0131071_0.00002804.pth'))
 
     def getParamsCount(self):
         pp = 0
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     MIN_EPSILON = .02
 
     BATCH_SIZE = 64
-    LR = 1e-4
+    LR = 1e-5
     DISCOUNT = .9
 
     WIN_REWARD = 1.
@@ -98,8 +98,8 @@ if __name__ == '__main__':
         pp += nn
     print(f'Number of parameters: {pp}')
 
-    LOAD_NET = False
-    PREV_NET = 'net_1587429147_-0.05454.pth'
+    LOAD_NET = True
+    PREV_NET = 'net_0131071_0.00002804.pth'
     SAVE_INTERVAL = 8_192
 
     if not os.path.exists('nets/'):
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
         start_step = step
         done = False
-        while not done and step - start_step < 512:
+        while not done and step - start_step < 256:
             for player_idt in [1, 2]:
                 step += 1
                 state = env.getState(reverse=player_idt == 2)
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                 if last_states[player_idt - 1] is not None:
                     if player_idt != adversarial:
                         rewards.append(STEP_REWARD)
-                    game_history.append((last_states[player_idt - 1][:], last_preds[player_idt - 1][:],
+                    game_history.append((last_states[player_idt - 1], last_preds[player_idt - 1],
                                          STEP_REWARD, state.tolist(), done))
 
                 if (LOAD_NET or len(history) >= MIN_HISTORY) and np.random.random() > epsilon:
@@ -155,9 +155,9 @@ if __name__ == '__main__':
                     rewards.append(WIN_REWARD if player_idt != adversarial else LOSE_REWARD)
                     wins.append(player_idt != adversarial)
 
-                    game_history.append((state[:], preds[:], WIN_REWARD, state[:], done))
-                    game_history.append((last_states[abs(player_idt - 2)][:], last_preds[abs(player_idt - 2)][:],
-                                         LOSE_REWARD, state[:], done))
+                    game_history.append((state, preds, WIN_REWARD, state, done))
+                    game_history.append((last_states[abs(player_idt - 2)], last_preds[abs(player_idt - 2)],
+                                         LOSE_REWARD, state, done))
 
                     history.extend(game_history)
 

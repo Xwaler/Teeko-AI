@@ -492,7 +492,11 @@ class Teeko:
                         self.minmax_thread.start()
 
                     else:
-                        self.makeMove(self.getRandomMove(self.turn_to.idt))
+                        difficulty = self.index_difficulty[self.turn_to.idt - 1]
+                        if difficulty == 0 or (difficulty == 1 and np.random.random() > .5):
+                            self.makeMove(self.getRandomMove(self.turn_to.idt))
+                        else:
+                            self.makeMove([0, np.random.choice([6, 7, 8, 11, 12, 13, 16, 17, 18]), 0])
 
                 elif self.turn_to.ptype == 2:
                     print(self.getState(reverse=self.turn_to.idt == 2))
