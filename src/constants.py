@@ -11,7 +11,7 @@ LSTTT = [0, 6, 0, 0, 5, 6]
 LSFTT = [0, 5, 0, 0, -1, 1]
 
 DIFFICULTY = ['Easy', 'Normal', 'Hard']
-PLAYERTYPE = ['Humain', 'AI', 'Learning']
+PLAYERTYPE = ['Humain', 'AI']
 MAX_DEPTH = [3, 4, 5]
 
 SCREEN_SIZE = (1200, 750)

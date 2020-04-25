@@ -4,9 +4,9 @@ import threading
 import numpy as np
 import pygame
 
-from constants import *
-from tools import randomChoice, predsToMove, moveToPreds
-from views import Plate, TokenView, Button
+from src.constants import *
+from src.tools import randomChoice
+from src.views import Plate, TokenView, Button
 
 
 class Player:
@@ -26,7 +26,6 @@ class Teeko:
         self.grid = None
         self.index_difficulty = None
         self.players = None
-        self.dqn_agent = None
         self.turn_to = None
         self.minmax_thread = None
         self.kill_thread = False
@@ -60,10 +59,6 @@ class Teeko:
         self.game_ended = False
         self.error_trigger_code = False
 
-    def loadDQN(self):
-        from dqn import DQNAgent
-        self.dqn_agent = DQNAgent()
-
     def reset(self, players=None, index_difficulty=(1, 1)):
         self.grid = np.zeros(GRID_SIZE * GRID_SIZE, dtype=np.int)
         self.index_difficulty = index_difficulty
@@ -71,8 +66,6 @@ class Teeko:
             self.players = players
             for player in self.players:
                 player.tokens.clear()
-                if player.ptype == 2 and self.dqn_agent is None:
-                    self.loadDQN()
         else:
             self.players = [Player(i, 1, i - 1) for i in [1, 2]]
         self.turn_to = randomChoice(self.players)
@@ -96,7 +89,7 @@ class Teeko:
                  self.players[k].ptype != 0) for m in range(4)
             )
 
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
+        self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 50)
 
         self.player_one = self.font.render('Player 1', True, BLACK)
         self.player_one_rect = self.player_one.get_rect()
@@ -106,7 +99,7 @@ class Teeko:
         self.player_two_rect = self.player_two.get_rect()
         self.player_two_rect.center = GAME_PLAYER_TWO_CENTER
 
-        self.currentlyplaying = pygame.image.load("hourglass.png")
+        self.currentlyplaying = pygame.image.load("resources/hourglass.png")
         self.angle = 0
 
         self.back_btn = Button(BACK_BTN_POS, BACK_BTN_SIZE, '< Back', BACKGROUND)
@@ -120,7 +113,7 @@ class Teeko:
         self.error_txt_2_rect = self.error_txt_2.get_rect()
         self.error_txt_2_rect.center = ERROR_TXT_CENTER
 
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 80)
+        self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 80)
         self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
         self.winner_annouced_rect = self.winner_annouced.get_rect()
         self.winner_annouced_rect.center = WINNER_CENTER
@@ -494,16 +487,9 @@ class Teeko:
                     else:
                         difficulty = self.index_difficulty[self.turn_to.idt - 1]
                         if difficulty == 0 or (difficulty == 1 and np.random.random() > .5):
-                            self.makeMove(self.getRandomMove(self.turn_to.idt))
+                            self.makeMove(self.getRandomMove())
                         else:
                             self.makeMove([0, np.random.choice([6, 7, 8, 11, 12, 13, 16, 17, 18]), 0])
-
-                elif self.turn_to.ptype == 2:
-                    print(self.getState(reverse=self.turn_to.idt == 2))
-                    preds = self.dqn_agent.predict(self.getState(reverse=self.turn_to.idt == 2))
-                    preds, move = self.correctMove(preds, self.turn_to.idt)
-                    print('Predicted move: ', move)
-                    self.makeMove(move)
 
             else:
                 self.turn += 1
@@ -515,30 +501,8 @@ class Teeko:
                 self.turn_to.has_played = False
                 self.turn_to = self.players[abs(self.turn_to.idt - 2)]
 
-    def step(self, move, player_idt):
-        self.turn_to = self.players[player_idt - 1]
-        self.makeMove(move)
-        return self.over()
-
-    def getState(self, reverse=False):
-        state = np.zeros((3, 5, 5), dtype=np.float)
-        rect = self.rectGrid()
-        for j in range(GRID_SIZE):
-            for i in range(GRID_SIZE):
-                state[rect[j][i]][j][i] = 1.
-        if reverse:
-            state[[1, 2]] = state[[2, 1]]
-        return state
-
-    def getRandomMove(self, player_idt):
-        return randomChoice(self.getAllMoves(self.players[player_idt - 1]))
-
-    def correctMove(self, preds, player_idt):
-        correct_moves = self.getAllMoves(self.players[player_idt - 1])
-        correct_preds_filter = np.sum([moveToPreds(move) for move in correct_moves], axis=0)
-        lower_bound = np.min(preds)
-        preds = ((preds - lower_bound) * correct_preds_filter) + lower_bound
-        return preds, predsToMove(preds)
+    def getRandomMove(self):
+        return randomChoice(self.getAllMoves(self.turn_to))
 
     def render(self):
         mouse_pos = pygame.mouse.get_pos()

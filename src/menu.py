@@ -2,9 +2,9 @@ import math
 
 import pygame
 
-from constants import *
-from env import Player
-from views import Button
+from src.constants import *
+from src.env import Player
+from src.views import Button
 
 
 class ColorChanger:
@@ -32,7 +32,7 @@ class Menu:
     def __init__(self, surf):
         self.surf = surf
 
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 180)
+        self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 180)
         self.title = self.font.render('Teeko AI', True, BLACK)
         self.title_rect = self.title.get_rect()
         self.title_rect.center = MENU_TITLE_POS
@@ -53,7 +53,7 @@ class Menu:
         self.rulesbtn = Button(RULES_BTN_POS, RULES_BTN_SIZE, "Rules", BACKGROUND)
         self.displayrules = False
 
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 50)
+        self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 50)
         self.player_one = self.font.render('Player 1', True, BLACK)
         self.player_one_rect = self.player_one.get_rect()
         self.player_one_rect.center = MENU_PLAYER_ONE_CENTER
@@ -109,8 +109,8 @@ class Menu:
                 self.AI_diff_two.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two]
 
             if self.tick_zone_one.on_button(pos):
-                if self.playerone.ptype < 2:
-                    self.playerone.ptype += 1
+                if self.playerone.ptype == 0:
+                    self.playerone.ptype = 1
                     self.AI_diff_one.enable()
                 else:
                     self.playerone.ptype = 0
@@ -119,8 +119,8 @@ class Menu:
                 self.tick_zone_one.text = PLAYERTYPE[self.playerone.ptype]
 
             if self.tick_zone_two.on_button(pos):
-                if self.playertwo.ptype < 2:
-                    self.playertwo.ptype += 1
+                if self.playertwo.ptype == 0:
+                    self.playertwo.ptype = 1
                     self.AI_diff_two.enable()
                 else:
                     self.playertwo.ptype = 0

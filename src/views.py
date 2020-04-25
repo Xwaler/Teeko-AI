@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from constants import *
+from src.constants import *
 
 
 class TokenView:
@@ -96,7 +96,7 @@ class Button:
     def drawRect(self, screen):
         pygame.draw.rect(screen, self.bordercolor, (self.x - 2, self.y - 2, self.w + 4, self.h + 4), 0)
         pygame.draw.rect(screen, self.color, self.rect, 0)
-        font = pygame.font.Font('Amatic-Bold.ttf', 35)
+        font = pygame.font.Font('resources/Amatic-Bold.ttf', 35)
         text = font.render(self.text, 1, self.textcolor)
         screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
 
@@ -108,7 +108,7 @@ class Button:
 
     def hover(self, screen):
         pygame.draw.rect(screen, self.bordercolor, self.rect, 0)
-        font = pygame.font.Font('Amatic-Bold.ttf', 35)
+        font = pygame.font.Font('resources/Amatic-Bold.ttf', 35)
         text = font.render(self.text, 1, WHITE)
         screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
 

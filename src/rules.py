@@ -1,21 +1,21 @@
 import pygame
 
-from constants import *
-from views import Button
+from src.constants import *
+from src.views import Button
 
 
 class Rules:
     def __init__(self, surf):
         self.surf = surf
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 120)
+        self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 120)
         self.title = self.font.render('Teeko Rules', True, BLACK)
         self.title_rect = self.title.get_rect()
         self.title_rect.center = (SCREEN_SIZE[0] / 2, 130)
 
-        with open('rules.txt', 'r') as f:
+        with open('resources/rules.txt', 'r') as f:
             self.rulestxt = f.readlines()
 
-        self.font = pygame.font.Font('Amatic-Bold.ttf', 40)
+        self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 40)
 
         self.leave_btn = Button(LEAVE_BTN_POS, LEAVE_BTN_SIZE, 'Leave', BACKGROUND)
 

@@ -2,18 +2,18 @@ import os
 
 import pygame
 
-from constants import *
-from env import Teeko
-from menu import Menu
-from rules import Rules
-from views import PageManager
+from src.constants import *
+from src.env import Teeko
+from src.menu import Menu
+from src.rules import Rules
+from src.views import PageManager
 
 
 def main():
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (200, 40)
     pygame.init()
     pygame.display.set_caption('Teeko-AI')
-    icon = pygame.image.load('Teeko_logo.png')
+    icon = pygame.image.load('resources/Teeko_logo.png')
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
 
