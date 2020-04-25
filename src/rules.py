@@ -23,7 +23,7 @@ class Rules:
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
 
-            if self.leave_btn.on_button(pos):
+            if self.leave_btn.onButton(pos):
                 return CODE_TO_MENU
 
     def render(self):

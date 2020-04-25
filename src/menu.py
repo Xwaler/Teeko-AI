@@ -86,13 +86,13 @@ class Menu:
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
 
-            if self.start_btn.on_button(pos):
+            if self.start_btn.onButton(pos):
                 return CODE_TO_GAME
 
-            if self.rulesbtn.on_button(pos):
+            if self.rulesbtn.onButton(pos):
                 return CODE_TO_RULES
 
-            if self.AI_diff_one.on_button(pos) and not self.AI_diff_one.isDisabled():
+            if self.AI_diff_one.onButton(pos) and not self.AI_diff_one.isDisabled():
                 if self.index_difficulty_one < 2:
                     self.index_difficulty_one += 1
                 else:
@@ -100,7 +100,7 @@ class Menu:
 
                 self.AI_diff_one.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_one]
 
-            if self.AI_diff_two.on_button(pos) and not self.AI_diff_two.isDisabled():
+            if self.AI_diff_two.onButton(pos) and not self.AI_diff_two.isDisabled():
                 if self.index_difficulty_two < 2:
                     self.index_difficulty_two += 1
                 else:
@@ -108,7 +108,7 @@ class Menu:
 
                 self.AI_diff_two.text = 'AI  Difficulty : ' + DIFFICULTY[self.index_difficulty_two]
 
-            if self.tick_zone_one.on_button(pos):
+            if self.tick_zone_one.onButton(pos):
                 if self.playerone.ptype == 0:
                     self.playerone.ptype = 1
                     self.AI_diff_one.enable()
@@ -118,7 +118,7 @@ class Menu:
 
                 self.tick_zone_one.text = PLAYERTYPE[self.playerone.ptype]
 
-            if self.tick_zone_two.on_button(pos):
+            if self.tick_zone_two.onButton(pos):
                 if self.playertwo.ptype == 0:
                     self.playertwo.ptype = 1
                     self.AI_diff_two.enable()
@@ -128,7 +128,7 @@ class Menu:
 
                 self.tick_zone_two.text = PLAYERTYPE[self.playertwo.ptype]
 
-            if self.leave_btn.on_button(pos):
+            if self.leave_btn.onButton(pos):
                 pygame.quit()
                 quit()
 

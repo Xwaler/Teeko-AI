@@ -34,6 +34,7 @@ class Teeko:
         self.render_enabled = surf is not None
         self.surf = surf
         self.players_tokens = None
+        self.last_played = None
         self.font = None
         self.player_one = None
         self.player_one_rect = None
@@ -88,6 +89,7 @@ class Teeko:
                                          COLORS[self.players[k].color_index]),
                  self.players[k].ptype != 0) for m in range(4)
             )
+        self.last_played = [None, None]
 
         self.font = pygame.font.Font('resources/Amatic-Bold.ttf', 50)
 
@@ -439,7 +441,9 @@ class Teeko:
                     div, mod = divmod(position, 5)
                     if drop_zones.abscisse == mod and drop_zones.ordonne == div:
                         drop_zones.available = False
-                        AI_tokens[len(self.turn_to.tokens) - 1][2].placeToken((drop_zones.x, drop_zones.y))
+                        token_view = AI_tokens[len(self.turn_to.tokens) - 1][2]
+                        token_view.placeToken((drop_zones.x, drop_zones.y))
+                        self.last_played[self.turn_to.idt - 1] = token_view
                         break
 
         else:
@@ -464,6 +468,7 @@ class Teeko:
                 for token in AI_tokens:
                     if token[2].initial_x == current_drop_zone.x and token[2].initial_y == current_drop_zone.y:
                         token[2].placeToken((future_drop_zone.x, future_drop_zone.y))
+                        self.last_played[self.turn_to.idt - 1] = token[2]
                         future_drop_zone.available = False
                         break
 
@@ -534,10 +539,7 @@ class Teeko:
 
         self.plate.render()
         for token_view in self.players_tokens:
-            if token_view[0] == 1:
-                token_view[2].render()
-            elif token_view[0] == 2:
-                token_view[2].render()
+            token_view[2].render(highlighted=token_view[2] in self.last_played)
 
         if self.game_ended:
             background_end = pygame.Surface(SCREEN_SIZE)
@@ -570,25 +572,25 @@ class Teeko:
     def parseEvent(self, event):
         mouse_pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.back_btn.on_button(mouse_pos):
+            if self.back_btn.onButton(mouse_pos):
                 return CODE_TO_MENU
 
             if self.game_ended:
-                if self.goto_menu.on_button(mouse_pos):
+                if self.goto_menu.onButton(mouse_pos):
                     self.game_ended = False
                     return CODE_TO_MENU
 
-                if self.leave_game.on_button(mouse_pos):
+                if self.leave_game.onButton(mouse_pos):
                     pygame.quit()
                     self.killMinMax()
                     quit()
 
-                if self.retry_btn.on_button(mouse_pos):
+                if self.retry_btn.onButton(mouse_pos):
                     self.game_ended = False
                     return CODE_TO_GAME
 
             for token_view in self.players_tokens:
-                if token_view[2].on_token(mouse_pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
+                if token_view[2].onToken(mouse_pos) and not token_view[3] and self.turn_to.idt == token_view[0]:
                     self.selected_token = token_view[2]
                     self.selection_offset_x = token_view[2].x - mouse_pos[0]
                     self.selection_offset_y = token_view[2].y - mouse_pos[1]
@@ -615,6 +617,7 @@ class Teeko:
 
                         self.addToken(self.turn_to, 5 * drop_zone.ordonne + drop_zone.abscisse)
                         self.selected_token.placeToken((drop_zone.x, drop_zone.y))
+                        self.last_played[self.turn_to.idt - 1] = self.selected_token
                         drop_zone.available = False
 
                         self.selected_token = None

@@ -12,10 +12,13 @@ class TokenView:
         self.initial_x, self.initial_y = x, y
         self.color = color
 
-    def render(self):
+    def render(self, highlighted=False):
         pygame.draw.circle(self.surf, self.color, (self.x, self.y), TOKEN_RADIUS)
+        if highlighted:
+            pygame.draw.circle(self.surf, LIME, (self.x, self.y),
+                               TOKEN_RADIUS + 4 - TOKEN_THICKNESS, 4 - TOKEN_THICKNESS)
 
-    def on_token(self, pos):
+    def onToken(self, pos):
         return math.sqrt(math.pow((self.x - pos[0]), 2) + math.pow((self.y - pos[1]), 2)) <= TOKEN_RADIUS
 
     def placeToken(self, pos):
@@ -100,7 +103,7 @@ class Button:
         text = font.render(self.text, 1, self.textcolor)
         screen.blit(text, (self.x + (self.w / 2 - text.get_width() / 2), self.y + (self.h / 2 - text.get_height() / 2)))
 
-    def on_button(self, pos):
+    def onButton(self, pos):
         return self.x < pos[0] < self.x + self.w and self.y < pos[1] < self.y + self.h
 
     def get_rect(self):
