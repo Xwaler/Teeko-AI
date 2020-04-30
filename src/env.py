@@ -131,7 +131,7 @@ class Teeko:
     def won(self):
         self.game_ended = True
         self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
-        print(f'Game finished. Player {self.turn_to.idt} won\n', self.rectGrid())
+        # print(f'Game finished. Player {self.turn_to.idt} won\n', self.rectGrid())
 
     def calculating(self):
         return self.minmax_thread is not None
@@ -476,9 +476,9 @@ class Teeko:
         self.minmax_thread = None
 
     def AI_handler(self):
-        print('\nGrid before : \n', self.rectGrid())
+        # print('\nGrid before : \n', self.rectGrid())
         score, move = self.minMax(MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]], -np.inf, np.inf, self.turn_to)
-        print('Score : ', score, ' | Selected move : ', move)
+        # print('Score : ', score, ' | Selected move : ', move)
         self.makeMove(move)
 
     def update(self):
@@ -498,7 +498,7 @@ class Teeko:
 
             else:
                 self.turn += 1
-                print(f'P{self.turn_to.idt} align : {self.getAligned(self.turn_to)}, tokens : {self.turn_to.tokens}')
+                # print(f'P{self.turn_to.idt} align : {self.getAligned(self.turn_to)}, tokens : {self.turn_to.tokens}')
 
                 if self.over():
                     self.won()
