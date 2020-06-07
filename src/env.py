@@ -13,7 +13,7 @@ class Player:
     def __init__(self, i, ptype, color):
         self.idt = i
         self.ptype = ptype
-        self.tokens = []
+        self.tokens = []  # Array that stores the location of each token bleonging to the player
         self.has_played = False
         self.color_index = color
 
@@ -26,7 +26,7 @@ class Teeko:
         self.grid = None
         self.index_difficulty = None
         self.players = None
-        self.turn_to = None
+        self.turn_to = None  # indicate which player needs to play
         self.minmax_thread = None
         self.kill_thread = False
         self.turn = None
@@ -60,8 +60,9 @@ class Teeko:
         self.game_ended = False
         self.error_trigger_code = False
 
+    # start a new game
     def reset(self, players=None, index_difficulty=(1, 1)):
-        self.grid = np.zeros(GRID_SIZE * GRID_SIZE, dtype=np.int)
+        self.grid = np.zeros(GRID_SIZE * GRID_SIZE, dtype=np.int)  # grid has only one dimension for better performances
         self.index_difficulty = index_difficulty
         if players is not None:
             self.players = players
@@ -128,6 +129,7 @@ class Teeko:
         self.selection_offset_y = 0
         self.selection_offset_x = 0
 
+    # end the game
     def won(self):
         self.game_ended = True
         self.winner_annouced = self.font.render(f'Player {self.turn_to.idt} won !', True, BLACK)
@@ -142,13 +144,15 @@ class Teeko:
             while self.calculating():
                 continue
 
+    # Compute the longest correct alignment belonging to the specified player
     def getAligned(self, player):
         longest_alignment = 1
 
         for token in player.tokens:
-            l_shape_first_direction = 0
+            l_shape_first_direction = 0  # L shape indicates an alignment which is one away from a 2 by 2 square
 
-            for direction in SURROUNDING:
+            for direction in SURROUNDING:  # Alignments are checked from to top right corner to the bottom left corner for better performances
+
                 current_alignment = 1
 
                 alignment_contain_zero = False
@@ -163,15 +167,15 @@ class Teeko:
                 IN_GRID = 0 <= next_cell < 25 and ((module_current_cell != 0 and module_current_cell != 4) or
                                                    (current_cell + next_cell) % 5 != 4)
 
-                while IN_GRID:
+                while IN_GRID:  # We're checking cells in the given direction while it is meaningful
                     next_cell_value = self.grid[next_cell]
 
                     if next_cell_value == 0:
-                        if alignment_contain_zero:
+                        if alignment_contain_zero:  # An alignment containing two consecutive 0 is not considered such. e.g. : 11001 will return 2
                             followed_by_two_0 = True
                             break
 
-                        else:
+                        else:  # This check allows 1011 to be considered as an alignment of length 3
                             alignment_contain_zero = True
                             zero_is_last = True
 
@@ -179,7 +183,7 @@ class Teeko:
                         zero_is_last = False
                         current_alignment += 1
 
-                    else:
+                    else:  # in this case the other player is blocking the current alignment
                         break
 
                     current_cell = next_cell
@@ -187,11 +191,12 @@ class Teeko:
 
                     next_cell = current_cell + direction
 
+                    # The following check indicates if the current token is in the grid. Keep in mind or 5 by 5 grid is store in an array of size 25
                     IN_GRID = 0 <= next_cell < 25 and ((module_current_cell != 0 and module_current_cell != 4) or
                                                        (current_cell + next_cell) % 5 != 4)
 
                 if current_alignment == 4:
-                    if alignment_contain_zero and not zero_is_last:
+                    if alignment_contain_zero and not zero_is_last:  # This insures that 11011 is considered an alignment of length 3
                         current_alignment = 3
 
                     else:
@@ -199,6 +204,8 @@ class Teeko:
 
                 elif current_alignment == 3:
                     if not alignment_contain_zero:
+                        # Here the alignment cannot extends further, so we're checking if there an empty spot before the first token
+
                         current_cell = token
                         module_current_cell = current_cell % 5
 
@@ -210,7 +217,8 @@ class Teeko:
                         if IN_GRID and self.grid[next_cell] == 0:
                             current_alignment = 3
 
-                        else:
+                        else:  # If there is not empty spot before the first token, the alignment can never win the game
+                            # As such, it is meaningless
                             current_alignment = 1
                             square_alignment, l_shape_first_direction = self.squareTest(l_shape_first_direction,
                                                                                         direction, token, player.idt)
@@ -220,13 +228,15 @@ class Teeko:
                         current_alignment = 3
 
                 elif current_alignment == 2:
-                    if not alignment_contain_zero or zero_is_last:
+                    if not alignment_contain_zero or zero_is_last:  # If the current alignment isn't 101
                         square_alignment, l_shape_first_direction = self.squareTest(l_shape_first_direction, direction,
                                                                                     token, player.idt)
 
                         current_alignment = max(current_alignment, square_alignment)
-                        if current_alignment == 2:
-                            if not followed_by_two_0:
+                        if current_alignment == 2:  # If the alignment isn't an L shape
+                            if not followed_by_two_0:  # If the alignment end with two 0, the following is implicit
+                                # Similarly to the alignments of length 3, we're checking if the alignment can grow to 4
+
                                 current_cell = token
                                 module_current_cell = current_cell % 5
 
@@ -253,10 +263,10 @@ class Teeko:
                                 else:
                                     current_alignment = 1
 
-                    elif alignment_contain_zero:
+                    elif alignment_contain_zero:  # 101 is consider to be length 1
                         current_alignment = 1
 
-                if current_alignment > 2:
+                if current_alignment > 2:  # There can't be 2 alignments of length greater than 2
                     return current_alignment
 
                 if current_alignment > longest_alignment:
@@ -264,34 +274,37 @@ class Teeko:
 
         return longest_alignment
 
+    # Determines if there is an L shape alignment. An L shape is made up of two size 2 alignments
     def squareTest(self, l_shape_first_direction, direction, token, idt):
         current_alignment = 3
 
-        if l_shape_first_direction == 0:
+        if l_shape_first_direction == 0:  # If the alignment of size 2 is the first one for this token
             current_alignment = 1
-            if direction != 6:
+            if direction != 6:  # There is no direction past 6, so there can't be an L shape alignment starting with 6
                 l_shape_first_direction = direction
 
-        elif LSTTT[l_shape_first_direction] != direction:
+        elif LSTTT[l_shape_first_direction] != direction:  # indicates whether the current alignment and the first one found describe an L shape alignment
             current_alignment = 1
-            if direction == 5 and l_shape_first_direction == 1:
-                fourth_cell_value = self.grid[token + 6]
+            if direction == 5 and l_shape_first_direction == 1:  # direction 1 has two possibilities, this check the one that isn't in LSTTT
+                fourth_cell_value = self.grid[token + 6]  # 1 5 is the only combination that can mean a 2 by 2 alignment
                 if fourth_cell_value == idt:
                     current_alignment = 4
                 elif fourth_cell_value == 0:
                     current_alignment = 3
 
-        else:
+        else:  # If it is an L shape, we check whether the other player is blocking it
             fourth_cell_value = self.grid[token + LSFTT[l_shape_first_direction]]
             if fourth_cell_value != 0:
                 current_alignment = 1
 
         return current_alignment, l_shape_first_direction
 
+    # Place a token
     def addToken(self, player, pos):
         self.grid[pos] = player.idt
         bisect.insort(player.tokens, pos)
 
+    # Remove a token
     def removeToken(self, player, pos):
         self.grid[pos] = 0
 
@@ -300,6 +313,7 @@ class Teeko:
                 player.tokens.remove(token)
                 break
 
+    # Move a token
     def moveToken(self, player, pos, direction):
         self.grid[pos] = 0
         self.grid[pos + direction] = player.idt
@@ -310,10 +324,11 @@ class Teeko:
                 player.tokens.sort()
                 break
 
+    # Return every move possible for a given token
     def getPossibleMove(self, token):
         token_moves = []
         module_pos = token % 5
-        SAFE_ZONE = (module_pos != 0 and module_pos != 4)
+        SAFE_ZONE = (module_pos != 0 and module_pos != 4)  # This area doesn't need an out of bounds horizontal check
 
         for shift in DIRECTIONS:
             token_plus = token + shift
@@ -323,23 +338,28 @@ class Teeko:
 
         return token_moves
 
+    # Return every move possible for a given player
     def getAllMoves(self, player):
-        if len(player.tokens) < 4:
+        if len(player.tokens) < 4:  # If the player has not place all of his tokens yet
             moves = [[0, pos, 0] for pos in self.getAllEmpty()]
         else:
             moves = []
             for token in player.tokens:
                 moves.extend(self.getPossibleMove(token))
         return moves
+    # move = [type, position, direction], type = 0 if the token is placed, 1 if it is moved
 
+    # Return every spot in the grid that doesn't contain a token
     def getAllEmpty(self):
         return np.where(self.grid == 0)[0]
 
+    # Determine if the game is over
     def over(self, align_score=None):
         if align_score is None:
             align_score = [self.getAligned(player) for player in self.players]
         return max(align_score) >= 4
 
+    # Return the score for a given state and depth
     def getScore(self, align_score=None, depth=0):
         if align_score is None:
             align_score = [self.getAligned(player) for player in self.players]
@@ -353,7 +373,6 @@ class Teeko:
             w1, w2 = (1.50, 1.75) if self.turn_to.idt == 1 else (1.75, 1.50)
             return round((p1 ** w1) - (p2 ** w2), 4)
 
-    #  move = (0, pos token à placer, 0) ou (1, pos token à deplacer, direction)
     def minMax(self, depth, alpha, beta, player):
         if self.kill_thread:
             self.minmax_thread = None
@@ -370,16 +389,19 @@ class Teeko:
             max_score = -np.inf
             max_score_move = None
 
-            for move in self.getAllMoves(player):
+            for move in self.getAllMoves(player):  # For each move
                 move_index, pos, direction = move
 
+                # Try
                 if move_index == 0:
                     self.addToken(player, pos)
                 else:
                     self.moveToken(player, pos, direction)
 
+                # Assess
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
 
+                # Revert
                 if move_index == 0:
                     self.removeToken(player, pos)
                 else:
@@ -430,6 +452,7 @@ class Teeko:
             else:
                 return min_score, min_score_move
 
+    # Update UI
     def makeMove(self, move):
         if move[0] == 0:
             _, position, _ = move

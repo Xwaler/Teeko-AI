@@ -7,8 +7,8 @@ DIRECTIONS = [-6, -5, -4, -1, 1, 4, 5, 6]
 # [[0, 1], [1, -1], [1, 0], [1, 1]]
 SURROUNDING = [1, 4, 5, 6]
 
-LSTTT = [0, 6, 0, 0, 5, 6]
-LSFTT = [0, 5, 0, 0, -1, 1]
+LSTTT = [0, 6, 0, 0, 5, 6]  # L Shape Third Token Table
+LSFTT = [0, 5, 0, 0, -1, 1] # L Shape Third Token Table
 
 DIFFICULTY = ['Easy', 'Normal', 'Hard']
 PLAYERTYPE = ['Humain', 'AI']
