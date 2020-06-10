@@ -3,6 +3,7 @@ import threading
 
 import numpy as np
 import pygame
+from tqdm import tqdm
 
 from src.constants import *
 from src.tools import randomChoice
@@ -194,9 +195,6 @@ class Teeko:
                     if alignment_contain_zero and not zero_is_last:
                         current_alignment = 3
 
-                    else:
-                        current_alignment = 4
-
                 elif current_alignment == 3:
                     if not alignment_contain_zero:
                         current_cell = token
@@ -366,11 +364,13 @@ class Teeko:
         if DEPTH_IS_ZERO or self.over(align_score):
             return self.getScore(align_score, depth)
 
+        moves = self.getAllMoves(player)
+
         if player.idt == 1:
             max_score = -np.inf
             max_score_move = None
 
-            for move in self.getAllMoves(player):
+            for move in tqdm(moves) if DEPTH_IS_MAX else moves:
                 move_index, pos, direction = move
 
                 if move_index == 0:
@@ -402,7 +402,7 @@ class Teeko:
             min_score = np.inf
             min_score_move = None
 
-            for move in self.getAllMoves(player):
+            for move in tqdm(moves) if DEPTH_IS_MAX else moves:
                 move_index, pos, direction = move
 
                 if move_index == 0:
