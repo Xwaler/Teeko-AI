@@ -15,7 +15,7 @@ def install():
             print('Conda not found\nExiting.')
             quit()
 
-    Popen([interpreter, 'install', 'pygame', 'numpy'])
+    Popen([interpreter, 'install', 'pygame', 'numpy', 'tqdm'])
 
 
 if __name__ == '__main__':
