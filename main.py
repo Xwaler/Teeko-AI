@@ -10,6 +10,7 @@ from src.views import PageManager
 
 
 def main():
+    # Screen init
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (200, 40)
     pygame.init()
     pygame.display.set_caption('Teeko-AI')
@@ -17,15 +18,18 @@ def main():
     pygame.display.set_icon(icon)
     clock = pygame.time.Clock()
 
-    page_manager = PageManager()
-
+    # Screens
     display = pygame.display.set_mode(SCREEN_SIZE)
     game = Teeko(pygame.Surface(SCREEN_SIZE))
     menu = Menu(pygame.Surface(SCREEN_SIZE))
     rules = Rules(pygame.Surface(SCREEN_SIZE))
+
+    # Page manager
+    page_manager = PageManager()
     page_manager.setPage(menu)
 
-    while True:
+    while True:  # Game loop
+        # Collect events
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 pygame.quit()
@@ -47,10 +51,12 @@ def main():
                 page_manager.transitionTo(rules)
 
         if page_manager.current == game and page_manager.ready():
-            game.update()
+            game.update()  # ingame update
 
+        # screen update
         page_manager.current.render()
 
+        # print screen
         page_manager.blit(display)
         pygame.display.update()
         clock.tick(FPS)

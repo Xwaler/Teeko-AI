@@ -141,8 +141,8 @@ class Teeko:
 
     def killMinMax(self):
         if self.calculating():
-            self.kill_thread = True
-            while self.calculating():
+            self.kill_thread = True  # indicate that the thread must exit
+            while self.calculating():  # waits until it exited
                 continue
 
     # Compute the longest correct alignment belonging to the specified player
@@ -372,7 +372,7 @@ class Teeko:
             return round((p1 ** w1) - (p2 ** w2), 4)
 
     def minMax(self, depth, alpha, beta, player):
-        if self.kill_thread:
+        if self.kill_thread:  # terminated by the main thread
             self.minmax_thread = None
             raise SystemExit()
 
@@ -411,7 +411,7 @@ class Teeko:
                     max_score = score
                     max_score_move = move
 
-                alpha = max(alpha, score)
+                alpha = max(alpha, score)  # update alpha
                 if beta <= alpha:
                     break
 
@@ -427,13 +427,16 @@ class Teeko:
             for move in tqdm(moves) if DEPTH_IS_MAX else moves:
                 move_index, pos, direction = move
 
+                # Try
                 if move_index == 0:
                     self.addToken(player, pos)
                 else:
                     self.moveToken(player, pos, direction)
 
+                # Assess
                 score = self.minMax(depth - 1, alpha, beta, self.players[abs(player.idt - 2)])
 
+                # Revert
                 if move_index == 0:
                     self.removeToken(player, pos)
                 else:
@@ -443,7 +446,7 @@ class Teeko:
                     min_score = score
                     min_score_move = move
 
-                beta = min(beta, score)
+                beta = min(beta, score)  # update beta
                 if beta <= alpha:
                     break
 
@@ -452,14 +455,16 @@ class Teeko:
             else:
                 return min_score, min_score_move
 
-    # Update UI
+    # Apply a move to the environment and interface
     def makeMove(self, move):
         if move[0] == 0:
             _, position, _ = move
             self.addToken(self.turn_to, position)
+
             if self.render_enabled:
                 AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
 
+                # place a token on a drop zone
                 for drop_zones in self.plate.playable_zones:
                     div, mod = divmod(position, 5)
                     if drop_zones.abscisse == mod and drop_zones.ordonne == div:
@@ -476,6 +481,7 @@ class Teeko:
             if self.render_enabled:
                 AI_tokens = [token for token in self.players_tokens if token[0] == self.turn_to.idt]
 
+                # move the selected token on it's new drop zone
                 current_drop_zone, future_drop_zone, i = None, None, 0
                 while current_drop_zone is None or future_drop_zone is None:
                     drop_zone = self.plate.playable_zones[i]
@@ -498,6 +504,7 @@ class Teeko:
         self.turn_to.has_played = True
         self.minmax_thread = None
 
+    #  MinMax thread handler
     def AI_handler(self):
         # print('\nGrid before : \n', self.rectGrid())
         score, move = self.minMax(MAX_DEPTH[self.index_difficulty[self.turn_to.idt - 1]], -np.inf, np.inf, self.turn_to)
@@ -510,7 +517,7 @@ class Teeko:
                 if self.turn_to.ptype == 1 and not self.calculating():
                     if self.turn != 0:
                         self.minmax_thread = threading.Thread(target=self.AI_handler)
-                        self.minmax_thread.start()
+                        self.minmax_thread.start()  # starts MinMax
 
                     else:
                         difficulty = self.index_difficulty[self.turn_to.idt - 1]
@@ -527,7 +534,7 @@ class Teeko:
                     self.won()
 
                 self.turn_to.has_played = False
-                self.turn_to = self.players[abs(self.turn_to.idt - 2)]
+                self.turn_to = self.players[abs(self.turn_to.idt - 2)]  # other player's turn
 
     def getRandomMove(self):
         return randomChoice(self.getAllMoves(self.turn_to))
@@ -564,7 +571,7 @@ class Teeko:
         for token_view in self.players_tokens:
             token_view[2].render(highlighted=token_view[2] in self.last_played)
 
-        if self.game_ended:
+        if self.game_ended:  # displays end game screen
             background_end = pygame.Surface(SCREEN_SIZE)
             background_end.fill(GRAY)
             background_end.set_alpha(150)
@@ -592,6 +599,7 @@ class Teeko:
 
             self.surf.blit(self.winner_annouced, self.winner_annouced_rect)
 
+    #  Parse user inputs
     def parseEvent(self, event):
         mouse_pos = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN:
